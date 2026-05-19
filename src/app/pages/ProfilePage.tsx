@@ -166,7 +166,7 @@ export function ProfilePage() {
                         </div>
                         <div className="flex-1">
                            <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">Email Address</p>
-                           <p className="text-sm font-bold text-[#111827]">{profile?.email || "manager@globxplorer.com"}</p>
+                           <p className="text-sm font-bold text-[#111827]">{profile?.email || "manager@GlobXplore.com"}</p>
                         </div>
                      </div>
 
@@ -306,3 +306,4 @@ export function ProfilePage() {
       </div>
    );
 }
+

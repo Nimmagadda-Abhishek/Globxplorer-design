@@ -77,7 +77,7 @@ export function AlumniRegisterPage() {
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <h2 className="text-3xl font-black text-slate-900 mb-2">Registration Successful!</h2>
-          <p className="text-slate-500 font-medium mb-8">Welcome to the GlobXplorer Alumni network. Redirecting you to login...</p>
+          <p className="text-slate-500 font-medium mb-8">Welcome to the GlobXplore Alumni network. Redirecting you to login...</p>
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div className="bg-green-500 h-full animate-progress-fast"></div>
           </div>
@@ -95,7 +95,7 @@ export function AlumniRegisterPage() {
             <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
               <Globe className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-black tracking-tighter">GlobXplorer</span>
+            <span className="text-2xl font-black tracking-tighter">GlobXplore</span>
           </div>
           
           <h1 className="text-4xl font-black leading-tight mb-6">Empower the next generation of explorers.</h1>
@@ -275,3 +275,4 @@ export function AlumniRegisterPage() {
     </div>
   );
 }
+

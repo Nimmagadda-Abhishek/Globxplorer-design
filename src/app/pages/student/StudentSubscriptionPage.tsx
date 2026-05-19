@@ -83,7 +83,7 @@ export function StudentSubscriptionPage() {
         key: "rzp_live_SdqWyTY0C7UH7A", // Actual Razorpay test key from .env
         amount: orderAmount, // paise from backend
         currency: orderData.currency || "INR",
-        name: "GlobXplorer",
+        name: "GlobXplore",
         description: `Subscription: ${plan.name}`,
         order_id: orderId, // The order_id from backend
         handler: async function (response: any) {
@@ -266,3 +266,4 @@ export function StudentSubscriptionPage() {
     </div>
   );
 }
+

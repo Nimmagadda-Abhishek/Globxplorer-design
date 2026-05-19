@@ -116,7 +116,7 @@ export function StudentPaymentsPage() {
             key: orderData.key || "rzp_live_SdqWyTY0C7UH7A",
             amount: razorpayOrder.amount || orderData.amount || (due.rawAmount * 100),
             currency: razorpayOrder.currency || orderData.currency || "INR",
-            name: "GlobXplorer",
+            name: "GlobXplore",
             description: `Payment: ${due.title}`,
             order_id: orderId,
             handler: async function (response: any) {
@@ -344,3 +344,4 @@ function LandmarkIcon(props: any) {
       </svg>
    )
 }
+

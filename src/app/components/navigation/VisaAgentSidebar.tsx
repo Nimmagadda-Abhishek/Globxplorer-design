@@ -96,10 +96,10 @@ export function VisaAgentSidebar() {
       <div className="p-6 border-b border-slate-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
-            <img src="/favicon.jpg" alt="GlobXplorer" className="w-full h-full object-cover" />
+            <img src="/favicon.jpg" alt="GlobXplore" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">GlobXplorer</h1>
+            <h1 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">GlobXplore</h1>
             <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none mt-1">Visa Portal</p>
           </div>
         </div>
@@ -185,3 +185,4 @@ export function VisaAgentSidebar() {
     </aside>
   );
 }
+

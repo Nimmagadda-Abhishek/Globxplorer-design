@@ -61,7 +61,7 @@ export function StudentReferralPage() {
                        <div className="p-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
                           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Your Unique Link</p>
                           <div className="flex items-center justify-between gap-4">
-                             <span className="text-xs font-bold text-slate-200 truncate">globxplorer.com/ref/{localStorage.getItem("gxId") || "YOUR-ID"}</span>
+                             <span className="text-xs font-bold text-slate-200 truncate">GlobXplore.com/ref/{localStorage.getItem("gxId") || "YOUR-ID"}</span>
                              <button className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"><Copy className="w-4 h-4" /></button>
                           </div>
                        </div>
@@ -156,3 +156,4 @@ export function StudentReferralPage() {
     </div>
   );
 }
+

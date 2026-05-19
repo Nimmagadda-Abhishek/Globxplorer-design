@@ -91,7 +91,7 @@ export function StudentAlumniPage() {
             key: "rzp_live_SdqWyTY0C7UH7A", // Match backend key to avoid 401 mismatch
             amount: order.amount,
             currency: order.currency,
-            name: "GlobXplorer",
+            name: "GlobXplore",
             description: `Payment for ${service.serviceType}`,
             order_id: order.id,
             handler: async (response: any) => {
@@ -292,3 +292,4 @@ export function StudentAlumniPage() {
       </div>
    );
 }
+

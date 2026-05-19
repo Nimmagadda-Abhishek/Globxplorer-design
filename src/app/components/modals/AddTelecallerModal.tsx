@@ -139,7 +139,7 @@ export function AddTelecallerModal({ isOpen, onClose, onSuccess }: AddTelecaller
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                placeholder="jane@globxplorer.com"
+                placeholder="jane@GlobXplore.com"
               />
             </div>
 
@@ -179,3 +179,4 @@ export function AddTelecallerModal({ isOpen, onClose, onSuccess }: AddTelecaller
     </div>
   );
 }
+

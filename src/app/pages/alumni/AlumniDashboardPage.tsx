@@ -94,7 +94,7 @@ export function AlumniDashboardPage() {
           <div>
             <h3 className="text-sm font-black text-blue-900 uppercase tracking-tight">Secure Payment Guarantee</h3>
             <p className="text-xs font-medium text-blue-700 mt-0.5 max-w-2xl">
-              Every payment made by a student for your services is recorded and securely held by GlobXplorer. 
+              Every payment made by a student for your services is recorded and securely held by GlobXplore. 
               Funds are transferred to your bank account only when the service is marked as <strong>Completed</strong> by the student.
             </p>
           </div>
@@ -318,3 +318,4 @@ export function AlumniDashboardPage() {
     </div>
   );
 }
+

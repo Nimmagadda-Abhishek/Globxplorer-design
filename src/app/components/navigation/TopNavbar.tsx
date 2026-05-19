@@ -62,10 +62,10 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
         {(!isStaff || true) && (
           <div className={`${!isStaff ? 'flex' : 'flex lg:hidden'} items-center gap-2`}>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden">
-              <img src="/favicon.jpg" alt="GlobXplorer" className="w-full h-full object-cover" />
+              <img src="/favicon.jpg" alt="GlobXplore" className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col -space-y-1">
-              <span className="text-lg font-black text-[#111827] tracking-tight">GlobXplorer</span>
+              <span className="text-lg font-black text-[#111827] tracking-tight">GlobXplore</span>
               <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest leading-none">Overseas</span>
             </div>
           </div>

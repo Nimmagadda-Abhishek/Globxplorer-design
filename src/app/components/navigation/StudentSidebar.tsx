@@ -41,10 +41,10 @@ export function StudentSidebar() {
       <div className="p-6 border-b border-slate-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
-            <img src="/favicon.jpg" alt="GlobXplorer" className="w-full h-full object-cover" />
+            <img src="/favicon.jpg" alt="GlobXplore" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-900 leading-tight">GlobXplorer</h1>
+            <h1 className="text-lg font-bold text-slate-900 leading-tight">GlobXplore</h1>
             <p className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">Student Portal</p>
           </div>
         </div>
@@ -86,3 +86,4 @@ export function StudentSidebar() {
     </aside>
   );
 }
+

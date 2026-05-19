@@ -42,6 +42,8 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { SearchBusinessPage } from "./pages/SearchBusinessPage";
 import { WhatsAppLogsPage } from "./pages/notifications/WhatsAppLogsPage";
+import { AlumniManagersPage } from "./pages/AlumniManagersPage";
+import { AlumniManagerDetailsPage } from "./pages/AlumniManagerDetailsPage";
 
 // Student Portal Pages
 import { StudentLayout } from "./components/layouts/StudentLayout";
@@ -98,11 +100,16 @@ import { AlumniReferralsPage } from "./pages/alumni/AlumniReferralsPage";
 import { AlumniBrandAmbassadorPage } from "./pages/alumni/AlumniBrandAmbassadorPage";
 import { AlumniProfilePage } from "./pages/alumni/AlumniProfilePage";
 import { AlumniBookingsPage } from "./pages/alumni/AlumniBookingsPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 
 export const router = createBrowserRouter([
   {
     path: "/login",
     Component: LoginPage,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
   },
   {
     path: "/alumni/register",
@@ -129,6 +136,8 @@ export const router = createBrowserRouter([
       { path: "telecaller-stats", Component: TelecallerStatsPage },
       { path: "counsellor-panel", Component: CounsellorPanelPage },
       { path: "agent-panel", Component: AgentPanelPage },
+      { path: "alumni-managers", element: <AlumniManagersPage /> },
+      { path: "alumni-managers/:id", element: <AlumniManagerDetailsPage /> },
       
       // Core Operations
       { path: "leads", Component: LeadsPage },

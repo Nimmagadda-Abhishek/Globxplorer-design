@@ -31,19 +31,10 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      // Differentiate APIs based on role
-      const result: any = role === "ADMIN"
-        ? await adminApi.auth.login({ gxId, password })
-        : role === "STUDENT"
-          ? await studentPortalApi.auth.login({ gxId, password })
-          : role === "ALUMNI"
-            ? await studentPortalApi.alumni.login({ gxId, password })
-            : role === "ALUMNI_MANAGER"
-              ? await alumniManagerApi.auth.login({ gxId, password })
-              : await authApi.login({ gxId, password });
+      const result: any = await authApi.login({ gxId, password });
 
       const data = result.data || result;
-      const accessToken = data?.accessToken || result.token;
+      const accessToken = data?.accessToken || result.token || result.access_token;
 
       if (!accessToken) {
         throw new Error("Login failed: Access token not provided.");
@@ -63,23 +54,52 @@ export function LoginPage() {
 
       if (userData.isFirstLogin || userData.mustChangePassword) {
         toast.success("Welcome! For your security, please change your password.");
-        if (actualRole === "STUDENT") {
-          navigate("/student/profile");
-        } else if (actualRole === "ALUMNI") {
-          navigate("/alumni/profile");
-        } else if (actualRole === "ALUMNI_MANAGER") {
-          navigate("/alumni-manager/profile");
-        } else {
-          navigate("/settings?tab=security");
+        switch (actualRole) {
+          case "STUDENT":
+            navigate("/student/profile");
+            break;
+          case "ALUMNI":
+            navigate("/alumni/profile");
+            break;
+          case "ALUMNI_MANAGER":
+            navigate("/alumni-manager/profile");
+            break;
+          case "VISA_AGENT":
+            navigate("/visa-agent/profile");
+            break;
+          default:
+            navigate("/settings?tab=security");
         }
-      } else if (actualRole === "STUDENT") {
-        navigate("/student");
-      } else if (actualRole === "ALUMNI") {
-        navigate("/alumni");
-      } else if (actualRole === "ALUMNI_MANAGER") {
-        navigate("/alumni-manager");
       } else {
-        navigate("/");
+        // Unified Role-Based Redirects
+        switch (actualRole) {
+          case 'ADMIN':
+          case 'AGENT_MANAGER':
+          case 'TELECALLER':
+          case 'COUNSELLOR':
+            navigate('/');
+            break;
+          case 'AGENT':
+            navigate('/');
+            break;
+          case 'STUDENT':
+            navigate('/student');
+            break;
+          case 'ALUMNI':
+            navigate('/alumni');
+            break;
+          case 'ALUMNI_MANAGER':
+            navigate('/alumni-manager');
+            break;
+          case 'VISA_AGENT':
+            navigate('/visa-agent');
+            break;
+          case 'VISA_CLIENT':
+            navigate('/client');
+            break;
+          default:
+            navigate('/');
+        }
       }
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Please check your GX ID and password.");
@@ -102,7 +122,7 @@ export function LoginPage() {
           <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <Globe className="w-6 h-6 text-white" strokeWidth={2.5} />
           </div>
-          <span className="text-2xl font-bold text-white tracking-tight">GLOBXPLORER</span>
+          <span className="text-2xl font-bold text-white tracking-tight">GlobXplore</span>
         </div>
 
         {/* Value Proposition */}
@@ -121,7 +141,7 @@ export function LoginPage() {
 
         {/* Footer info */}
         <div className="relative z-10 flex items-center justify-between text-sm text-slate-500">
-          <span>&copy; {new Date().getFullYear()} GlobXplorer</span>
+          <span>&copy; {new Date().getFullYear()} GlobXplore</span>
           <a href="#" className="hover:text-white transition-colors duration-200">Help & Support</a>
         </div>
       </div>
@@ -137,7 +157,7 @@ export function LoginPage() {
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/20">
               <Globe className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">GlobXplorer</span>
+            <span className="text-xl font-bold text-slate-900 tracking-tight">GlobXplore</span>
           </div>
 
           <div className="mb-10 text-left">
@@ -151,39 +171,6 @@ export function LoginPage() {
                 <div className="text-red-700 text-sm font-medium leading-relaxed">{error}</div>
               </div>
             )}
-
-            {/* Role Selection Dropdown */}
-            <div className="space-y-1.5 focus-within:text-indigo-600 transition-colors">
-              <label className="text-sm font-semibold text-slate-700 block">
-                Login As
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {[
-                  { id: "ADMIN", label: "Admin", icon: Shield },
-                  { id: "AGENT_MANAGER", label: "AM", icon: Users },
-                  { id: "AGENT", label: "Agent", icon: UserCheck },
-                  { id: "COUNSELLOR", label: "Counsellor", icon: GraduationCap },
-                  { id: "TELECALLER", label: "Caller", icon: Headset },
-                  { id: "VISA_AGENT", label: "Visa", icon: Briefcase },
-                  { id: "STUDENT", label: "Student", icon: User },
-                  { id: "ALUMNI", label: "Alumni", icon: GraduationCap },
-                  { id: "ALUMNI_MANAGER", label: "Alum-M", icon: Users },
-                ].map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRole(r.id as UserRole)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${role === r.id
-                      ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200"
-                      : "bg-slate-50 border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
-                      }`}
-                  >
-                    <r.icon className="w-3.5 h-3.5" />
-                    {r.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="space-y-1.5 focus-within:text-indigo-600 transition-colors">
               <label className="text-sm font-semibold text-slate-700 block" htmlFor="gxId">
@@ -204,7 +191,6 @@ export function LoginPage() {
                   placeholder="e.g. GXCO123456"
                 />
               </div>
-
             </div>
 
             <div className="space-y-1.5 focus-within:text-indigo-600 transition-colors">
@@ -212,9 +198,9 @@ export function LoginPage() {
                 <label className="text-sm font-semibold text-slate-700 block" htmlFor="password">
                   Password
                 </label>
-                <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-all">
+                <Link to="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-all">
                   Forgot password?
-                </a>
+                </Link>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
@@ -252,12 +238,6 @@ export function LoginPage() {
           </form>
 
           <div className="mt-10 text-center text-sm font-medium text-slate-500 space-y-3">
-            <div>
-              Don't have an account?{" "}
-              <a href="#" className="text-indigo-600 hover:text-indigo-700 hover:underline transition-all">
-                Contact your administrator
-              </a>
-            </div>
             <div className="pt-2 border-t border-slate-100">
               Are you an Alumnus?{" "}
               <Link to="/alumni/register" className="text-indigo-600 hover:text-indigo-700 hover:underline transition-all font-bold">
@@ -270,3 +250,4 @@ export function LoginPage() {
     </div>
   );
 }
+

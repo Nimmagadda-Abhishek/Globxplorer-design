@@ -126,7 +126,7 @@ export function AddAgentManagerModal({ isOpen, onClose, onSubmitSuccess }: AddAg
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full pl-10 pr-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent outline-none"
-                    placeholder="jane@globxplorer.com"
+                    placeholder="jane@GlobXplore.com"
                   />
                 </div>
               </div>
@@ -160,3 +160,4 @@ export function AddAgentManagerModal({ isOpen, onClose, onSubmitSuccess }: AddAg
     </>
   );
 }
+

@@ -45,7 +45,7 @@ export function PartnerOffersPage() {
         {offers.map((offer, i) => (
           <div 
             key={i} 
-            onClick={() => window.open('https://globxplorer.com', '_blank')}
+            onClick={() => window.open('https://GlobXplore.com', '_blank')}
             className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden group hover:border-[#4F46E5] transition-all cursor-pointer"
           >
             <div className="p-6">
@@ -91,3 +91,4 @@ export function PartnerOffersPage() {
     </div>
   );
 }
+

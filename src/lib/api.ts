@@ -1,6 +1,6 @@
-// API Client for GlobXplorer CRM
+// API Client for GlobXplore CRM
 
-const BASE_URL = 'https://api.globxplore.in/api';
+const BASE_URL = 'http://localhost:3000/api';
 
 /**
  * Basic helper to add auth token
@@ -20,34 +20,10 @@ const getHeaders = (): HeadersInit => {
  * Helper to log and execute fetch requests
  */
 const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-  const method = options.method || 'GET';
-  const startTime = Date.now();
-
-  // Try to parse body for logging if it's a JSON string
-  let loggedBody = options.body;
-  if (typeof options.body === 'string') {
-    try {
-      loggedBody = JSON.parse(options.body);
-    } catch (e) {
-      // Keep as string if not JSON
-    }
-  } else if (options.body instanceof FormData) {
-    loggedBody = '[FormData]';
-  }
-
-  console.log(`🚀 [API Request] ${method} ${url}`, {
-    headers: options.headers,
-    body: loggedBody
-  });
-
   try {
     const response = await fetch(url, options);
-    const duration = Date.now() - startTime;
-    console.log(`✅ [API Response] ${method} ${url} | Status: ${response.status} | Duration: ${duration}ms`);
     return response;
   } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error(`❌ [API Error] ${method} ${url} | Duration: ${duration}ms`, error);
     throw error;
   }
 };
@@ -58,10 +34,8 @@ const apiFetch = async (url: string, options: RequestInit = {}): Promise<Respons
 async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    console.error(`📦 [API Error Data]`, data);
     throw new Error(data.error || data.message || `Request failed with status ${response.status}`);
   }
-  console.log(`📦 [API Success Data]`, data);
   return data;
 }
 
@@ -110,7 +84,7 @@ export const authApi = {
         headers: getHeaders(),
       });
     } catch (error) {
-      console.error('Logout failed on server', error);
+      // Silently fail logout on server
     }
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
@@ -121,6 +95,33 @@ export const authApi = {
     const res = await apiFetch(`${BASE_URL}/auth/change-password`, {
       method: 'PUT',
       headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  forgotPassword: async (data: { identifier: string }) => {
+    const res = await apiFetch(`${BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  verifyOtp: async (data: { identifier: string; otp: string }) => {
+    const res = await apiFetch(`${BASE_URL}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  resetPassword: async (data: { identifier: string; otp: string; newPassword: string }) => {
+    const res = await apiFetch(`${BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     return handleResponse(res);
@@ -737,16 +738,7 @@ const ADMIN_BASE_URL = `${BASE_URL}/admin`;
 export const adminApi = {
   auth: {
     login: async (data: Record<string, any>) => {
-      const res = await apiFetch(`${ADMIN_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const result: any = await handleResponse(res);
-      if (result.data?.accessToken) {
-        localStorage.setItem('token', result.data.accessToken);
-      }
-      return result;
+      return authApi.login(data as any);
     },
     logout: async () => {
       await authApi.logout();
@@ -826,11 +818,41 @@ export const adminApi = {
     }
   },
   alumniManagers: {
+    list: async (params: Record<string, any> = {}) => {
+      const query = new URLSearchParams(params).toString();
+      const res = await apiFetch(`${ADMIN_BASE_URL}/alumni-managers?${query}`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
     create: async (data: { name: string; email: string; phone: string }) => {
       const res = await apiFetch(`${ADMIN_BASE_URL}/alumni-managers`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
+    getById: async (id: string) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/alumni-managers/${id}`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    updateStatus: async (id: string, isActive: boolean) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/alumni-managers/${id}/status`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ isActive }),
+      });
+      return handleResponse(res);
+    },
+    getAnalytics: async (id: string) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/alumni-managers/${id}/analytics`, {
+        method: 'GET',
+        headers: getHeaders(),
       });
       return handleResponse(res);
     }
@@ -1345,16 +1367,7 @@ const AGENT_BASE_URL = `${BASE_URL}/agent`;
 export const agentApi = {
   auth: {
     login: async (data: Record<string, any>) => {
-      const res = await apiFetch(`${AGENT_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const result: any = await handleResponse(res);
-      if (result.data?.accessToken) {
-        localStorage.setItem('token', result.data.accessToken);
-      }
-      return result;
+      return authApi.login(data as any);
     },
     logout: async () => {
       await apiFetch(`${AGENT_BASE_URL}/logout`, { method: 'POST', headers: getHeaders() });
@@ -1577,16 +1590,7 @@ export const studentPortalApi = {
       return handleResponse(res);
     },
     login: async (data: Record<string, any>) => {
-      const res = await apiFetch(`${BASE_URL}/student/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const result: any = await handleResponse(res);
-      if (result.accessToken || result.token) {
-        localStorage.setItem('token', result.accessToken || result.token);
-      }
-      return result;
+      return authApi.login(data as any);
     }
   },
   dashboard: {
@@ -1775,12 +1779,7 @@ export const studentPortalApi = {
       return handleResponse(res);
     },
     login: async (data: any) => {
-      const res = await apiFetch(`${BASE_URL}/alumni/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      return handleResponse(res);
+      return authApi.login(data);
     },
     book: async (id: string) => {
       const res = await apiFetch(`${BASE_URL}/alumni/services/${id}/book`, {
@@ -2209,16 +2208,7 @@ const VISA_CLIENT_BASE_URL = `${BASE_URL}/client`;
 export const visaClientApi = {
   auth: {
     login: async (gxvcId: string, password: string) => {
-      const res = await apiFetch(`${BASE_URL}/client/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gxvcId, password }),
-      });
-      const result: any = await handleResponse(res);
-      if (result.token) {
-        localStorage.setItem('token', result.token);
-      }
-      return result;
+      return authApi.login({ gxId: gxvcId, password });
     },
     me: async () => {
       const res = await apiFetch(`${VISA_CLIENT_BASE_URL}/me`, {
@@ -2289,17 +2279,7 @@ const ALUMNI_MANAGER_BASE_URL = `${BASE_URL}/alumni-manager`;
 export const alumniManagerApi = {
   auth: {
     login: async (data: Record<string, any>) => {
-      const res = await apiFetch(`${ALUMNI_MANAGER_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const result: any = await handleResponse(res);
-      const token = result.token || result.access_token || (result.data && result.data.accessToken);
-      if (token) {
-        localStorage.setItem('token', token);
-      }
-      return result;
+      return authApi.login(data as any);
     },
     me: async () => {
       const res = await apiFetch(`${ALUMNI_MANAGER_BASE_URL}/me`, {
@@ -2979,4 +2959,5 @@ export const notificationApi = {
     return handleResponse(res);
   }
 };
+
 

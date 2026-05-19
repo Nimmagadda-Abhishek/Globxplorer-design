@@ -23,11 +23,31 @@ export function ClientLoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await visaClientApi.auth.login(gxvcId, password);
-      if (res.token || res.data?.token) {
-        navigate('/client');
-      } else {
-        setError("Invalid credentials. Please check your GXVC ID and password.");
+      const result: any = await visaClientApi.auth.login(gxvcId, password);
+      
+      const data = result.data || result;
+      const user = data.user || data;
+      const role = user.role || 'VISA_CLIENT';
+
+      // Save additional user info if needed
+      if (user.gxvcId) localStorage.setItem('gxId', user.gxvcId);
+      if (user._id || user.id) localStorage.setItem('userId', user._id || user.id);
+      localStorage.setItem('userRole', role);
+
+      // Unified Role-Based Redirects
+      switch (role) {
+        case 'VISA_CLIENT':
+          navigate('/client');
+          break;
+        case 'VISA_AGENT':
+          navigate('/visa-agent');
+          break;
+        case 'ADMIN':
+        case 'AGENT':
+          navigate('/');
+          break;
+        default:
+          navigate('/client');
       }
     } catch (err: any) {
       setError(err.message || "An error occurred during login. Please try again.");

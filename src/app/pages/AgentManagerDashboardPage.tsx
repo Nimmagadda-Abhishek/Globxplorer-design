@@ -502,7 +502,7 @@ export function AgentManagerDashboardPage() {
               Performance Report
             </button>
             <button
-              onClick={() => window.location.href = 'mailto:admin@globxplorer.com'}
+              onClick={() => window.location.href = 'mailto:admin@GlobXplore.com'}
               className="flex-1 min-w-[150px] px-6 py-4 bg-[#4F46E5] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-[#4338CA] transition-all flex items-center justify-center gap-2"
             >
               <Users2 className="w-4 h-4" />
@@ -514,4 +514,5 @@ export function AgentManagerDashboardPage() {
     </div>
   );
 }
+
 

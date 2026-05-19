@@ -64,7 +64,7 @@ export function MarketingPage() {
               <ExternalLink 
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open('https://globxplorer.com', '_blank');
+                  window.open('https://GlobXplore.com', '_blank');
                 }}
                 className="w-4 h-4 text-[#CBD5E1] group-hover:text-[#4F46E5] transition-colors cursor-pointer" 
               />
@@ -87,4 +87,5 @@ export function MarketingPage() {
     </div>
   );
 }
+
 

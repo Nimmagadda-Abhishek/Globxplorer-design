@@ -6,7 +6,7 @@ export function AlumniReferralsPage() {
   const [loading, setLoading] = useState(true);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
-  const [link, setLink] = useState("https://globxplorer.com/ref/GXAL123456");
+  const [link, setLink] = useState("https://GlobXplore.com/ref/GXAL123456");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -140,3 +140,4 @@ export function AlumniReferralsPage() {
     </div>
   );
 }
+

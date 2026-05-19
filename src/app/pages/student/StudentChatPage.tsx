@@ -120,7 +120,7 @@ export function StudentChatPage() {
     // Simulate support response
     setTimeout(() => {
       setMessages(prev => [...prev, { 
-        content: "Thank you for reaching out to GlobXplorer Support. A counsellor will be available to assist you shortly. In the meantime, please feel free to browse our FAQ or update your profile documents.", 
+        content: "Thank you for reaching out to GlobXplore Support. A counsellor will be available to assist you shortly. In the meantime, please feel free to browse our FAQ or update your profile documents.", 
         timestamp: new Date(), 
         sender: 'support' 
       }]);
@@ -469,3 +469,4 @@ export function StudentChatPage() {
     </div>
   );
 }
+

@@ -93,7 +93,7 @@ export function CreateContentModal({ isOpen, onClose, onSuccess }: CreateContent
                 value={formData.url}
                 onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                 className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                placeholder="https://globxplorer.com/canada"
+                placeholder="https://GlobXplore.com/canada"
               />
             </div>
 
@@ -130,3 +130,4 @@ export function CreateContentModal({ isOpen, onClose, onSuccess }: CreateContent
     </div>
   );
 }
+
