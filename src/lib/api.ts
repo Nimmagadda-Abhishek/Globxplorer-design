@@ -1,6 +1,6 @@
 // API Client for GlobXplore CRM
 
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'https://api.globxplore.in/api';
 
 /**
  * Basic helper to add auth token
