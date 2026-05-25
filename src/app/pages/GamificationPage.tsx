@@ -35,7 +35,7 @@ export function GamificationPage() {
     <div className="space-y-8 relative">
       {loading && (
         <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-50 flex items-center justify-center">
-           <Loader2 className="w-10 h-10 text-[#4F46E5] animate-spin" />
+          <Loader2 className="w-10 h-10 text-[#4F46E5] animate-spin" />
         </div>
       )}
       <div className="flex items-center justify-between">
@@ -95,58 +95,6 @@ export function GamificationPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-[#E5E7EB] shadow-sm">
-            <h3 className="text-sm font-black text-[#111827] uppercase tracking-wider mb-6">Current Rewards</h3>
-            <div className="space-y-4">
-              {[
-                { label: "Amazon Gift Card", cost: "5000 XP", icon: Gift, color: "text-orange-500" },
-                { label: "Paid Leave Day", cost: "12000 XP", icon: Award, color: "text-blue-500" },
-                { label: "Performance Bonus", cost: "25000 XP", icon: Target, color: "text-green-500" },
-              ].map((r, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 border border-gray-50 rounded-xl bg-[#F9FAFB]">
-                  <div className={`p-2 rounded-lg bg-white shadow-sm ${r.color}`}>
-                    <r.icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-[#111827]">{r.label}</p>
-                    <p className="text-[10px] font-black text-[#4F46E5]">{r.cost}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-[#EEF2FF] p-6 rounded-2xl border border-[#C7D2FE]">
-            <div className="flex items-center gap-3 mb-4">
-              <Zap className="w-5 h-5 text-[#4F46E5] fill-[#4F46E5]" />
-              <h3 className="text-sm font-black text-[#111827] uppercase tracking-wider">Your Stats</h3>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-[10px] font-bold uppercase mb-1.5">
-                  <span className="text-[#6B7280]">Level {gamificationData?.userLevel || 0}</span>
-                  <span className="text-[#4F46E5]">{gamificationData?.userXP || 0} / {gamificationData?.nextLevelXP || 100} XP</span>
-                </div>
-                <div className="w-full h-2 bg-white/50 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#4F46E5] rounded-full" style={{ width: `${(gamificationData?.userXP / gamificationData?.nextLevelXP) * 100}%` }} />
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-2">
-                <div className="text-center px-4">
-                  <p className="text-lg font-black text-[#111827]">{gamificationData?.badgesCount || 0}</p>
-                  <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest">Badges</p>
-                </div>
-                <div className="w-px h-8 bg-indigo-200" />
-                <div className="text-center px-4">
-                  <p className="text-lg font-black text-[#111827]">{gamificationData?.userRank || "-"}</p>
-                  <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest">Rank</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>

@@ -183,10 +183,9 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
           <div>
             <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2 flex items-center gap-2">
               <UserCheck className="w-3.5 h-3.5" />
-              Assign to Agent *
+              Assign to Agent (Optional)
             </label>
             <select
-              required
               value={formData.assignedAgentGxId}
               onChange={(e) => setFormData({ ...formData, assignedAgentGxId: e.target.value })}
               className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"

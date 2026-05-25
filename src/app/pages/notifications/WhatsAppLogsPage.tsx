@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "../../components/ui/table";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
-import { 
-  Search, 
-  RefreshCcw, 
-  AlertCircle, 
-  CheckCircle2, 
-  Clock, 
+import {
+  Search,
+  RefreshCcw,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
   MessageSquare,
   ChevronLeft,
   ChevronRight,
@@ -67,7 +67,7 @@ export function WhatsAppLogsPage() {
     }
   };
 
-  const filteredLogs = logs.filter(log => 
+  const filteredLogs = logs.filter(log =>
     log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (log.userId?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
     (log.userId?.phone || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -92,15 +92,6 @@ export function WhatsAppLogsPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-medium">Message History</CardTitle>
-            <div className="relative w-72">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, phone or message..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -112,20 +103,18 @@ export function WhatsAppLogsPage() {
                   <TableHead>Message</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Sent At</TableHead>
-                  <TableHead>Delivered At</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       Loading logs...
                     </TableCell>
                   </TableRow>
                 ) : filteredLogs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       No logs found.
                     </TableCell>
                   </TableRow>
@@ -157,14 +146,7 @@ export function WhatsAppLogsPage() {
                       <TableCell className="text-xs">
                         {log.sentAt ? format(new Date(log.sentAt), "MMM d, HH:mm") : "N/A"}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {log.deliveredAt ? format(new Date(log.deliveredAt), "MMM d, HH:mm") : "-"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" title="View Details">
-                          <ExternalLink className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
+
                     </TableRow>
                   ))
                 )}

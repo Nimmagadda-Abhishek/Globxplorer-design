@@ -71,16 +71,6 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
           </div>
         )}
 
-        {isStaff && (
-          <div className="flex-1 max-w-md relative hidden lg:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
-            <input
-              type="text"
-              placeholder={isVisaAgent ? "Search Name / GX ID / Passport..." : "Search GX ID, Business or Student..."}
-              className="w-full pl-10 pr-4 py-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#4F46E5] transition-all"
-            />
-          </div>
-        )}
       </div>
 
       <div className="flex items-center gap-4">

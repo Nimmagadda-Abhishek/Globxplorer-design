@@ -1,4 +1,4 @@
-import { Bell, Check, Trash2, ExternalLink } from "lucide-react";
+import { Bell, Check, Trash2, ExternalLink, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { initSocket, getSocket } from "../../utils/socket";
 import { notificationApi } from "../../../lib/api";
@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [popupNotification, setPopupNotification] = useState<any>(null);
   const role = localStorage.getItem("userRole");
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export function NotificationBell() {
       socket.on("new_notification", (notification) => {
         setNotifications((prev) => [notification, ...prev].slice(0, 5));
         setUnreadCount((prev) => prev + 1);
+        setPopupNotification(notification);
       });
 
       socket.on("unread_count_updated", ({ unreadCount }) => {
@@ -40,6 +42,18 @@ export function NotificationBell() {
       };
     }
   }, [localStorage.getItem("userId")]);
+
+  useEffect(() => {
+    if (!popupNotification) return;
+
+    const timer = window.setTimeout(() => {
+      setPopupNotification(null);
+    }, 12000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [popupNotification]);
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -81,19 +95,40 @@ export function NotificationBell() {
   };
 
   return (
-    <DropdownMenu.Root onOpenChange={handleOpenChange}>
-      <DropdownMenu.Trigger asChild>
-        <button className="p-2 text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl transition-colors relative outline-none">
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white text-[10px] text-white flex items-center justify-center font-bold">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </button>
-      </DropdownMenu.Trigger>
+    <>
+      {popupNotification && (
+        <div className="fixed top-20 right-4 z-[110] w-[320px] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-3">
+          <div className="flex items-start justify-between gap-3 p-4">
+            <div className="flex-1">
+              <p className="text-sm font-black text-slate-900">{popupNotification.title || "New notification"}</p>
+              <p className="text-xs text-slate-600 mt-1 line-clamp-2">{popupNotification.message || popupNotification.body || "You have a new alert."}</p>
+            </div>
+            <button
+              onClick={() => setPopupNotification(null)}
+              className="p-1 text-slate-400 hover:text-slate-700 rounded-full transition-colors"
+              aria-label="Dismiss notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="w-full h-1 bg-indigo-500/20" />
+          <div className="p-3 text-[10px] uppercase tracking-[0.2em] text-slate-500 bg-slate-50">Visible for 12 seconds</div>
+        </div>
+      )}
 
-      <DropdownMenu.Portal>
+      <DropdownMenu.Root onOpenChange={handleOpenChange}>
+        <DropdownMenu.Trigger asChild>
+          <button className="p-2 text-[#6B7280] hover:bg-[#F3F4F6] rounded-xl transition-colors relative outline-none">
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white text-[10px] text-white flex items-center justify-center font-bold">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+        </DropdownMenu.Trigger>
+
+        <DropdownMenu.Portal>
         <DropdownMenu.Content
           className="w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 mt-2 z-[100] overflow-hidden"
           align="end"
@@ -165,6 +200,7 @@ export function NotificationBell() {
           </div>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+      </DropdownMenu.Root>
+    </>
   );
 }

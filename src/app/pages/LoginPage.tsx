@@ -4,6 +4,8 @@ import { adminApi, authApi, studentPortalApi, alumniManagerApi } from "../../lib
 import {
   User,
   Lock,
+  Eye,
+  EyeOff,
   Loader2,
   Globe,
   Shield,
@@ -20,6 +22,7 @@ type UserRole = "ADMIN" | "AGENT_MANAGER" | "ALUMNI_MANAGER" | "AGENT" | "TELECA
 export function LoginPage() {
   const [gxId, setGxId] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>("ADMIN");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -174,7 +177,7 @@ export function LoginPage() {
 
             <div className="space-y-1.5 focus-within:text-indigo-600 transition-colors">
               <label className="text-sm font-semibold text-slate-700 block" htmlFor="gxId">
-                GX ID
+                GX ID/ Email
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
@@ -188,7 +191,7 @@ export function LoginPage() {
                   value={gxId}
                   onChange={(e) => setGxId(e.target.value)}
                   className="block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-[3px] focus:ring-indigo-500/10 focus:border-indigo-500 transition-all sm:text-sm font-medium"
-                  placeholder="e.g. GXCO123456"
+                  placeholder="e.g. GXCO123456 or admin@globxplore.in"
                 />
               </div>
             </div>
@@ -209,13 +212,21 @@ export function LoginPage() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-[3px] focus:ring-indigo-500/10 focus:border-indigo-500 transition-all sm:text-sm font-medium"
+                  className="block w-full pl-11 pr-12 py-3.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-[3px] focus:ring-indigo-500/10 focus:border-indigo-500 transition-all sm:text-sm font-medium"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
+                </button>
               </div>
             </div>
 

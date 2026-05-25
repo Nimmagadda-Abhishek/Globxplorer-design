@@ -53,7 +53,7 @@ export function VisaAgentTopNavbar() {
         <div className="h-8 w-px bg-slate-100 mx-1" />
 
         {/* Profile */}
-        <Link to="/visa-agent/profile" className="flex items-center gap-3 pl-1 group">
+        <div className="flex items-center gap-3 pl-1 group">
           <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 border border-emerald-100 group-hover:bg-emerald-100 transition-colors">
             <User className="w-5 h-5" />
           </div>
@@ -62,7 +62,7 @@ export function VisaAgentTopNavbar() {
             <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">{profile?.gxId || "GX-VISA"}</p>
           </div>
           <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
-        </Link>
+        </div>
       </div>
     </header>
   );

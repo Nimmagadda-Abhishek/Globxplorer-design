@@ -69,7 +69,7 @@ export function StudentTopNavbar({ onMenuClick }: StudentTopNavbarProps) {
         <div className="h-8 w-px bg-slate-100 mx-1" />
 
         {/* Profile */}
-        <Link to="/student/profile" className="flex items-center gap-3 pl-1 group">
+        <div className="flex items-center gap-3 pl-1 group">
           <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 border border-indigo-100 group-hover:bg-indigo-100 transition-colors">
             <User className="w-5 h-5" />
           </div>
@@ -78,7 +78,7 @@ export function StudentTopNavbar({ onMenuClick }: StudentTopNavbarProps) {
             <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">{profile?.gxId || "N/A"}</p>
           </div>
           <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
-        </Link>
+        </div>
       </div>
     </header>
   );

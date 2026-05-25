@@ -19,25 +19,57 @@ const getHeaders = (): HeadersInit => {
 /**
  * Helper to log and execute fetch requests
  */
+// Utility: mask Authorization header when logging
+function maskAuth(headers?: any) {
+  if (!headers) return headers;
+  try {
+    const h = { ...headers } as Record<string, any>;
+    if (h.Authorization) h.Authorization = 'Bearer ****';
+    if (h.authorization) h.authorization = 'Bearer ****';
+    return h;
+  } catch (e) {
+    return headers;
+  }
+}
+
+function parseBodyForLog(body: any) {
+  if (!body) return null;
+  try {
+    if (typeof body === 'string') {
+      return JSON.parse(body);
+    }
+    if (body instanceof FormData) return '[FormData]';
+    return body;
+  } catch (e) {
+    return body;
+  }
+}
+
 const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const method = (options.method || 'GET').toUpperCase();
+
   try {
     const response = await fetch(url, options);
     return response;
   } catch (error) {
+    console.error(`[API ERROR] ${method} ${url}`, error);
     throw error;
   }
 };
+
 
 /**
  * Handle fetch response
  */
 async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => ({}));
+
   if (!response.ok) {
     throw new Error(data.error || data.message || `Request failed with status ${response.status}`);
   }
   return data;
 }
+
 
 // ----------------------------------------------------
 // 1. Authentication
@@ -711,7 +743,7 @@ export const configApi = {
     return handleResponse(res);
   },
 
-  createOffer: async (data: { title: string; description: string; countryTarget: string; isActive: boolean }) => {
+  createOffer: async (data: { title: string; description: string; countryTarget?: string; isActive?: boolean; expiresAt?: string }) => {
     const res = await apiFetch(`${BASE_URL}/offer`, {
       method: 'POST',
       headers: getHeaders(),
@@ -736,12 +768,39 @@ export const configApi = {
 const ADMIN_BASE_URL = `${BASE_URL}/admin`;
 
 export const adminApi = {
+  companyDocuments: {
+    upload: async (data: FormData) => {
+      const headers = getHeaders() as Record<string, string>;
+      delete headers['Content-Type'];
+      const res = await apiFetch(`${ADMIN_BASE_URL}/documents/upload`, {
+        method: 'POST',
+        headers,
+        body: data,
+      });
+      return handleResponse(res);
+    },
+    list: async () => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/documents`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    getById: async (id: string) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/documents/${id}`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    }
+  },
   auth: {
     login: async (data: Record<string, any>) => {
       return authApi.login(data as any);
     },
     logout: async () => {
       await authApi.logout();
+      try { localStorage.removeItem('isLocked'); } catch(e) {}
     },
     me: async () => {
       const res = await apiFetch(`${ADMIN_BASE_URL}/me`, {
@@ -798,6 +857,22 @@ export const adminApi = {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
+    updateCredentials: async (id: string, data: Record<string, any>) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/users/${id}/update-credentials`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
+    lockUser: async (id: string, isLocked: boolean) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/users/${id}/lock`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ isLocked }),
       });
       return handleResponse(res);
     },
@@ -1125,7 +1200,7 @@ export const adminApi = {
       return handleResponse(res);
     },
     getGamification: async () => {
-      const res = await apiFetch(`${ADMIN_BASE_URL}/gamification`, {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/gamification/`, {
         method: 'GET',
         headers: getHeaders(),
       });
@@ -2960,4 +3035,24 @@ export const notificationApi = {
   }
 };
 
+// ----------------------------------------------------
+// Agent Performance API
+// ----------------------------------------------------
 
+export const agentPerformanceApi = {
+  /**
+   * GET /api/admin/agents/performance
+   * Returns all agents with:
+   *  - studentsAdded   (students the agent created, not just assigned)
+   *  - studentsEnrolled (students in 'Enrolled' stage linked to agent)
+   *  - totalEarnings, pendingEarnings, paidEarnings (from CommissionLog)
+   *  - tier / tierLabel (Starter, Growth, Pro, Elite)
+   */
+  getAll: async () => {
+    const res = await apiFetch(`${BASE_URL}/admin/agents/performance`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+};
