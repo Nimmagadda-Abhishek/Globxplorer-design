@@ -25,6 +25,7 @@ import {
 import { useState, useEffect } from "react";
 import { counsellorApi } from "../../lib/api";
 import { PaymentRequestModal } from "../components/modals/PaymentRequestModal";
+import { AddStudentModal } from "../components/modals/AddStudentModal";
 
 export function CounsellorDashboardPage() {
   const [stats, setStats] = useState<any>(null);
@@ -38,6 +39,7 @@ export function CounsellorDashboardPage() {
   const [activity, setActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAddStudent, setShowAddStudent] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -100,7 +102,10 @@ export function CounsellorDashboardPage() {
             <Filter className="w-3.5 h-3.5" />
             Filters
           </button>
-          <button className="px-4 py-2 bg-[#4F46E5] text-white rounded-xl text-xs font-bold hover:bg-[#4338CA] transition-all shadow-lg shadow-indigo-100 flex items-center gap-2">
+          <button 
+            onClick={() => setShowAddStudent(true)}
+            className="px-4 py-2 bg-[#4F46E5] text-white rounded-xl text-xs font-bold hover:bg-[#4338CA] transition-all shadow-lg shadow-indigo-100 flex items-center gap-2"
+          >
             <Plus className="w-3.5 h-3.5" />
             Quick Add
           </button>
@@ -108,6 +113,7 @@ export function CounsellorDashboardPage() {
       </div>
 
       {showPaymentModal && <PaymentRequestModal onClose={() => setShowPaymentModal(false)} />}
+      <AddStudentModal isOpen={showAddStudent} onClose={() => setShowAddStudent(false)} onSuccess={fetchDashboardData} />
 
       {/* SECTION 1: KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">

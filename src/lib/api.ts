@@ -527,6 +527,14 @@ export const counsellorApi = {
     });
     return handleResponse(res);
   },
+  createStudent: async (data: Record<string, any>) => {
+    const res = await apiFetch(`${BASE_URL}/counsellor/students`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
   sendMessage: async (id: string, data: { message: string }) => {
     const res = await apiFetch(`${BASE_URL}/student/${id}/message`, {
       method: 'POST',
@@ -800,7 +808,7 @@ export const adminApi = {
     },
     logout: async () => {
       await authApi.logout();
-      try { localStorage.removeItem('isLocked'); } catch(e) {}
+      try { localStorage.removeItem('isLocked'); } catch (e) { }
     },
     me: async () => {
       const res = await apiFetch(`${ADMIN_BASE_URL}/me`, {

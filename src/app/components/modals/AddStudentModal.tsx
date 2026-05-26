@@ -1,6 +1,6 @@
 import { X, Loader2, CheckCircle2, GraduationCap, UserCheck, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { amApi, adminApi } from "../../../lib/api";
+import { amApi, adminApi, counsellorApi } from "../../../lib/api";
 
 interface AddStudentModalProps {
   isOpen: boolean;
@@ -16,6 +16,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
 
   const role = localStorage.getItem("userRole") || "ADMIN";
   const isAM = role === "AGENT_MANAGER";
+  const isCounsellor = role === "COUNSELLOR";
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -61,7 +62,18 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
     setError("");
 
     try {
-      const res: any = await amApi.students.create(formData);
+      let res: any;
+      if (isCounsellor) {
+        res = await counsellorApi.createStudent({
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.contact,
+          interestedCountry: formData.country,
+        });
+      } else {
+        res = await amApi.students.create(formData);
+      }
+      
       setSuccessData({
         gxId: res.data?.gxId || "GXST" + Math.floor(Math.random() * 1000000),
         message: "Student record created and assigned successfully."
@@ -180,24 +192,26 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
             </div>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2 flex items-center gap-2">
-              <UserCheck className="w-3.5 h-3.5" />
-              Assign to Agent (Optional)
-            </label>
-            <select
-              value={formData.assignedAgentGxId}
-              onChange={(e) => setFormData({ ...formData, assignedAgentGxId: e.target.value })}
-              className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
-            >
-              <option value="">Select one of your agents</option>
-              {agents.map(agent => (
-                <option key={agent.gxId} value={agent.gxId}>
-                  {agent.businessName} ({agent.gxId})
-                </option>
-              ))}
-            </select>
-          </div>
+          {!isCounsellor && (
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2 flex items-center gap-2">
+                <UserCheck className="w-3.5 h-3.5" />
+                Assign to Agent (Optional)
+              </label>
+              <select
+                value={formData.assignedAgentGxId}
+                onChange={(e) => setFormData({ ...formData, assignedAgentGxId: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+              >
+                <option value="">Select one of your agents</option>
+                {agents.map(agent => (
+                  <option key={agent.gxId} value={agent.gxId}>
+                    {agent.businessName} ({agent.gxId})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex gap-4 pt-6">
             <button
