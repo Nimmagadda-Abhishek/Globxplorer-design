@@ -65,7 +65,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error || data.message || `Request failed with status ${response.status}`);
+    let errorMessage = data.error || data.message || `Request failed with status ${response.status}`;
+    if (errorMessage.toLowerCase().includes('invalid token') || errorMessage.toLowerCase().includes('invalid tocken')) {
+      errorMessage = "The session expired please login";
+    }
+    throw new Error(errorMessage);
   }
   return data;
 }
