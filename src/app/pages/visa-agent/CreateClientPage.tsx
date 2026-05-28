@@ -48,7 +48,7 @@ export function CreateClientPage() {
     }
   };
 
-  const countries = ["USA", "Canada", "UK", "Australia", "Germany", "France", "Japan"];
+  const countries = ["USA", "Canada", "UK", "Australia", "Germany", "France", "Japan", "Ireland"];
   const visaTypes = ["F1", "B1", "B2", "B1/B2", "H1B", "F2", "H4"];
 
   if (success) {

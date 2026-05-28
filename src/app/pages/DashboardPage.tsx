@@ -304,7 +304,7 @@ export function DashboardPage() {
 
               {/* Tabs */}
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {["All", "Canada", "USA", "UK", "Others"].map((tab) => (
+                {["All", "Canada", "USA", "UK", "Ireland", "Others"].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveUpdateTab(tab)}

@@ -187,6 +187,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
                 <option value="USA">USA</option>
                 <option value="Canada">Canada</option>
                 <option value="Australia">Australia</option>
+                <option value="Ireland">Ireland</option>
                 <option value="Germany">Germany</option>
               </select>
             </div>

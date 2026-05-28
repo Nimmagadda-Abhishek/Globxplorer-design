@@ -41,6 +41,7 @@ const visaAgentNavGroups = [
           { path: "/visa-agent/countries/germany", label: "Germany" },
           { path: "/visa-agent/countries/uk", label: "UK" },
           { path: "/visa-agent/countries/australia", label: "Australia" },
+          { path: "/visa-agent/countries/ireland", label: "Ireland" },
         ]
       },
       { 

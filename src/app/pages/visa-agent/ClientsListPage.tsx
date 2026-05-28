@@ -60,7 +60,7 @@ export function ClientsListPage() {
     }
   };
 
-  const countries = ["All", "USA", "Canada", "UK", "Australia", "Germany", "France", "Japan"];
+  const countries = ["All", "USA", "Canada", "UK", "Australia", "Germany", "France", "Japan", "Ireland"];
   const visaTypes = ["All", "F1", "B1", "B2", "B1/B2", "H1B", "F2", "H4"];
   const statuses = ["All", "client_created", "ds160_pending", "ds160_submitted", "payment_pending", "payment_completed", "slot_monitoring", "slot_booked", "approved", "rejected"];
 

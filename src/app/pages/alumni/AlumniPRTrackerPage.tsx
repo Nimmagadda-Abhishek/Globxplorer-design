@@ -83,6 +83,7 @@ export function AlumniPRTrackerPage() {
                 <option>UK</option>
                 <option>USA</option>
                 <option>Germany</option>
+                <option>Ireland</option>
               </select>
             </div>
             <div>

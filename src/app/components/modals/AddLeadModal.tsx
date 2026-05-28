@@ -129,6 +129,7 @@ export function AddLeadModal({ isOpen, onClose, onSuccess }: AddLeadModalProps) 
                 <option value="Canada">Canada</option>
                 <option value="UK">UK</option>
                 <option value="Australia">Australia</option>
+                <option value="Ireland">Ireland</option>
                 <option value="India">India</option>
                 <option value="China">China</option>
               </select>

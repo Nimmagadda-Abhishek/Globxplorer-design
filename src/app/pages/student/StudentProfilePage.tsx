@@ -139,6 +139,7 @@ export function StudentProfilePage() {
                         <option>USA</option>
                         <option>Canada</option>
                         <option>Australia</option>
+                        <option>Ireland</option>
                      </select>
                   </div>
 
