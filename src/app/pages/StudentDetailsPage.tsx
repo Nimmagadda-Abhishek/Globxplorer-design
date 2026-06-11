@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, User, MessageCircle, MoreVertical, Upload, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, User, MessageCircle, MoreVertical, Upload, FileText, CheckCircle2, AlertCircle, Bell } from "lucide-react";
 import { studentApi } from "../../lib/api";
 
 export function StudentDetailsPage() {
@@ -102,7 +102,14 @@ export function StudentDetailsPage() {
                   className="text-xl sm:text-2xl font-bold text-[#111827] bg-white border border-[#E5E7EB] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
                 />
               ) : (
-                <h1 className="text-xl sm:text-2xl font-bold text-[#111827]">{student.name}</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-xl sm:text-2xl font-bold text-[#111827]">{student.name}</h1>
+                  {student.gxId && (
+                    <span className="text-xs font-black px-2 py-0.5 bg-gray-100 text-[#4B5563] rounded tracking-wider">
+                      {student.gxId}
+                    </span>
+                  )}
+                </div>
               )}
               
               <div className="relative">
@@ -437,6 +444,23 @@ function AcademicTab({ student, isEditing, formData, setFormData }: { student: a
                 <p className="text-sm font-medium text-[#111827]">{student.intake || "N/A"}</p>
               )}
             </div>
+            <div>
+              <p className="text-xs text-[#6B7280] mb-1">University Type Preference</p>
+              {isEditing ? (
+                <select
+                  name="universityType"
+                  value={formData.universityType || "Public"}
+                  onChange={handleChange}
+                  className="w-full px-3 py-1.5 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+                >
+                  <option value="Public">Public</option>
+                  <option value="Private">Private</option>
+                  <option value="Any">Any</option>
+                </select>
+              ) : (
+                <p className="text-sm font-medium text-[#111827]">{student.universityType || "N/A"}</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -547,6 +571,7 @@ function AcademicTab({ student, isEditing, formData, setFormData }: { student: a
 function DocumentsTab({ student, studentId }: { student: any; studentId: string }) {
   const [loading, setLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [requestingDoc, setRequestingDoc] = useState<string | null>(null);
 
   const initialDocs = [
     { name: "Passport", type: "PASSPORT" },
@@ -582,6 +607,19 @@ function DocumentsTab({ student, studentId }: { student: any; studentId: string 
     }
   };
 
+  const handleRequest = async (docName: string) => {
+    try {
+      setRequestingDoc(docName);
+      await studentApi.requestDocument(studentId, { documentName: docName });
+      alert(`Requested ${docName} successfully!`);
+    } catch (err) {
+      console.error("Request failed", err);
+      alert("Failed to request document");
+    } finally {
+      setRequestingDoc(null);
+    }
+  };
+
   const getDocStatus = (name: string) => {
     const existing = student.documents?.find((d: any) => d.name === name);
     return existing ? { status: "uploaded", date: existing.createdAt } : { status: "pending", date: null };
@@ -614,30 +652,40 @@ function DocumentsTab({ student, studentId }: { student: any; studentId: string 
                 {status === "uploaded" ? `Added on ${new Date(date).toLocaleDateString()}` : "Standard admission requirement"}
               </p>
               
-              <div className="relative">
-                <input
-                  type="file"
-                  id={`upload-${index}`}
-                  className="hidden"
-                  onChange={(e) => e.target.files && handleUpload(doc.name, doc.type, e.target.files[0])}
-                />
-                <label
-                  htmlFor={`upload-${index}`}
-                  className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                    status === "uploaded"
-                      ? "bg-white border border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
-                      : "bg-[#4F46E5] text-white hover:bg-[#4338CA] shadow-sm"
-                  }`}
-                >
-                  {isUploading ? (
-                    "Processing..."
-                  ) : (
-                    <>
-                      <Upload className="w-3.5 h-3.5" />
-                      {status === "uploaded" ? "Replace" : "Upload File"}
-                    </>
-                  )}
-                </label>
+              <div className="flex items-center gap-2">
+                {status !== "uploaded" && (
+                  <button
+                    onClick={() => handleRequest(doc.name)}
+                    disabled={requestingDoc === doc.name}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold bg-white border border-[#E5E7EB] text-[#4F46E5] hover:bg-indigo-50 transition-all disabled:opacity-50"
+                  >
+                    <Bell className="w-3.5 h-3.5" />
+                    {requestingDoc === doc.name ? "Sending..." : "Request"}
+                  </button>
+                )}
+                <div className="relative flex-1">
+                  <input
+                    type="file"
+                    id={`upload-${index}`}
+                    className="hidden"
+                    onChange={(e) => e.target.files && handleUpload(doc.name, doc.type, e.target.files[0])}
+                  />
+                  <label
+                    htmlFor={`upload-${index}`}
+                    className={`w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                      status === "uploaded"
+                        ? "bg-white border border-[#E5E7EB] text-[#4B5563] hover:bg-[#F9FAFB]"
+                        : "bg-[#4F46E5] text-white hover:bg-[#4338CA] shadow-sm"
+                    }`}
+                  >
+                    {isUploading ? "..." : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        {status === "uploaded" ? "Replace" : "Upload"}
+                      </>
+                    )}
+                  </label>
+                </div>
               </div>
             </div>
           );
@@ -648,40 +696,69 @@ function DocumentsTab({ student, studentId }: { student: any; studentId: string 
 }
 
 function CommunicationTab({ student }: { student: any }) {
-  const messages = student.messages || [];
+  const [messages, setMessages] = useState<any[]>(student.messages || []);
+  const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!newMessage.trim()) return;
+    setSending(true);
+    try {
+      await studentApi.sendMessage(student._id || student.id, { text: newMessage });
+      setMessages([...messages, { 
+        sender: localStorage.getItem("userRole") === "ADMIN" ? "admin" : "agent", 
+        senderRole: localStorage.getItem("userRole") || "COUNSELLOR",
+        senderName: localStorage.getItem("userName") || "Me",
+        content: newMessage, 
+        text: newMessage,
+        timestamp: new Date().toISOString() 
+      }]);
+      setNewMessage("");
+    } catch (err) {
+      console.error("Failed to send message", err);
+      alert("Failed to send message");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <div className="h-96 overflow-y-auto bg-[#F8FAFC] rounded-lg p-4 space-y-4">
+      <div className="h-96 overflow-y-auto bg-[#F8FAFC] rounded-lg p-4 space-y-4 custom-scrollbar">
         {messages.length > 0 ? (
-          messages.map((msg: any, idx: number) => (
-            <div
-              key={idx}
-              className={`flex ${msg.senderRole === "COUNSELLOR" ? "justify-end" : "justify-start"}`}
-            >
-              <div className={`flex gap-3 max-w-[70%] ${msg.senderRole === "COUNSELLOR" ? "flex-row-reverse" : ""}`}>
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-[#4F46E5] rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-white">
-                      {msg.senderName ? msg.senderName.split(" ").map((n: string) => n[0]).join("") : "U"}
-                    </span>
+          messages.map((msg: any, idx: number) => {
+            const isStudent = msg.sender === "student";
+            return (
+              <div
+                key={idx}
+                className={`flex ${!isStudent ? "justify-end" : "justify-start"}`}
+              >
+                <div className={`flex gap-3 max-w-[70%] ${!isStudent ? "flex-row-reverse" : ""}`}>
+                  <div className="flex-shrink-0">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isStudent ? "bg-gray-300 text-gray-700" : "bg-[#4F46E5] text-white"
+                    }`}>
+                      <span className="text-xs font-medium">
+                        {isStudent ? "S" : (msg.senderName ? msg.senderName[0].toUpperCase() : "A")}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className={`flex flex-col ${msg.senderRole === "COUNSELLOR" ? "items-end" : ""}`}>
-                  <div className={`rounded-lg p-3 ${
-                    msg.senderRole === "COUNSELLOR"
-                      ? "bg-[#4F46E5] text-white"
-                      : "bg-white border border-[#E5E7EB] text-[#111827]"
-                  }`}>
-                    <p className="text-sm">{msg.content || msg.message}</p>
+                  <div className={`flex flex-col ${!isStudent ? "items-end" : ""}`}>
+                    <div className={`rounded-lg p-3 ${
+                      !isStudent
+                        ? "bg-[#4F46E5] text-white"
+                        : "bg-white border border-[#E5E7EB] text-[#111827]"
+                    }`}>
+                      <p className="text-sm">{msg.text || msg.content || msg.message}</p>
+                    </div>
+                    <p className="text-xs text-[#6B7280] mt-1">
+                      {msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ""}
+                    </p>
                   </div>
-                  <p className="text-xs text-[#6B7280] mt-1">
-                    {msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ""}
-                  </p>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="flex items-center justify-center h-full text-[#6B7280] italic">
             No messages yet. Start a conversation!
@@ -692,11 +769,18 @@ function CommunicationTab({ student }: { student: any }) {
       <div className="flex gap-2">
         <input
           type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="Type your message..."
           className="flex-1 px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#111827] placeholder:text-[#6B7280] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
         />
-        <button className="px-6 py-2.5 bg-[#4F46E5] text-white rounded-lg text-sm font-medium hover:bg-[#4338CA] transition-colors">
-          Send
+        <button 
+          onClick={handleSend}
+          disabled={sending || !newMessage.trim()}
+          className="px-6 py-2.5 bg-[#4F46E5] text-white rounded-lg text-sm font-medium hover:bg-[#4338CA] transition-colors disabled:opacity-50"
+        >
+          {sending ? "Sending..." : "Send"}
         </button>
       </div>
     </div>

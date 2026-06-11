@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Calendar, Plus, Search, Clock, AlertCircle, CheckCircle2, Filter, Loader2 } from "lucide-react";
 import { AddFollowUpModal } from "../components/modals/AddFollowUpModal";
-import { amApi } from "../../lib/api";
+import { amApi, leadApi } from "../../lib/api";
 
 export function FollowUpsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -9,6 +9,9 @@ export function FollowUpsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [followUps, setFollowUps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const userRole = (localStorage.getItem("userRole") || "").toUpperCase();
+  const isTelecaller = userRole === "TELECALLER";
 
   useEffect(() => {
     fetchFollowUps();
@@ -17,8 +20,61 @@ export function FollowUpsPage() {
   const fetchFollowUps = async () => {
     setLoading(true);
     try {
-      const res = await amApi.followUps.list();
-      setFollowUps(res.data || []);
+      if (isTelecaller) {
+        const res: any = await leadApi.getLeadQueue();
+        const data = res.data || res;
+        
+        let leads: any[] = [];
+        if (Array.isArray(data)) {
+          leads = data;
+        } else {
+          leads = [
+            ...(data.missedFollowups || []),
+            ...(data.newLeads || []),
+            ...(data.oldLeads || [])
+          ];
+        }
+
+        const uniqueLeadsMap = new Map();
+        leads.forEach(l => { if (l && l._id) uniqueLeadsMap.set(l._id, l); });
+        const uniqueLeads = Array.from(uniqueLeadsMap.values());
+
+        const mappedFollowUps = uniqueLeads
+          .filter(lead => lead.followUpDate || lead.status === 'Follow-up scheduled' || lead.status === 'Call not answered')
+          .map(lead => {
+            let isOverdue = false;
+            let dueDateStr = new Date().toISOString().split('T')[0];
+            let dueTimeStr = "00:00";
+            
+            if (lead.followUpDate) {
+              const d = new Date(lead.followUpDate);
+              dueDateStr = d.toISOString().split('T')[0];
+              dueTimeStr = d.toTimeString().substring(0, 5);
+              isOverdue = d.getTime() < new Date().getTime();
+            } else if (lead.status === 'Call not answered') {
+              isOverdue = true;
+            }
+
+            return {
+              _id: lead._id,
+              id: lead._id, // Add id as fallback since UI uses followUp.id or followUp._id
+              studentName: lead.name || 'Unknown Lead',
+              priority: isOverdue ? 'High' : 'Medium',
+              dueDate: dueDateStr,
+              dueTime: dueTimeStr,
+              type: lead.status || 'Call Log',
+              agent: lead.assignedTo || 'Telecaller',
+              notes: lead.notes || `Phone: ${lead.phone || 'N/A'}`,
+              status: isOverdue ? 'overdue' : 'scheduled'
+            };
+          });
+          
+        setFollowUps(mappedFollowUps);
+      } else if (!isTelecaller) {
+        // Only AGENT_MANAGER and above should call this endpoint
+        const res = await amApi.followUps.list();
+        setFollowUps(res.data || []);
+      }
     } catch (err) {
       console.error("Failed to fetch follow-ups", err);
     } finally {
@@ -46,7 +102,11 @@ export function FollowUpsPage() {
 
   const handleComplete = async (id: string) => {
     try {
-      await amApi.followUps.update(id, { status: 'completed' });
+      if (isTelecaller) {
+        await leadApi.updateLeadStatus(id, { status: "Contacted" });
+      } else {
+        await amApi.followUps.update(id, { status: 'completed' });
+      }
       fetchFollowUps();
     } catch (err) {
       console.error("Failed to complete follow-up", err);
@@ -107,13 +167,15 @@ export function FollowUpsPage() {
             <option value="medium">Medium</option>
             <option value="low">Low</option>
           </select>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#4F46E5] text-white rounded-lg text-sm font-medium hover:bg-[#4338CA] transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Follow-up
-          </button>
+          {!isTelecaller && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#4F46E5] text-white rounded-lg text-sm font-medium hover:bg-[#4338CA] transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Follow-up
+            </button>
+          )}
         </div>
       </div>
 
@@ -172,21 +234,23 @@ export function FollowUpsPage() {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleReschedule(followUp.id || followUp._id)}
-                    className="px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#F8FAFC] transition-colors"
-                  >
-                    Reschedule
-                  </button>
-                  <button
-                    onClick={() => handleComplete(followUp.id || followUp._id)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    Complete
-                  </button>
-                </div>
+                {!isTelecaller && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleReschedule(followUp.id || followUp._id)}
+                      className="px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#F8FAFC] transition-colors"
+                    >
+                      Reschedule
+                    </button>
+                    <button
+                      onClick={() => handleComplete(followUp.id || followUp._id)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Complete
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );

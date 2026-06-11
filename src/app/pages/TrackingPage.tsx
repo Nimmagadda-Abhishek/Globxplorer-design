@@ -13,53 +13,93 @@ export function TrackingPage() {
     attendance: "0%"
   });
 
+  const [pastStartDate, setPastStartDate] = useState("2026-06-01");
+  const [pastEndDate, setPastEndDate] = useState("2026-06-07");
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const mapAttendanceData = (rawData: any[]) => {
+    return rawData
+      .filter((row: any) => row.userId?.role !== 'ADMIN') // Hide Admin's data
+      .map((row: any) => {
+        const activeTime = row.activeTime ?? row.activeTimeMinutes ?? 0;
+        const idleTime = row.idleTime ?? row.idleTimeMinutes ?? 0;
+        
+        const activeHours = Math.floor(activeTime / 60);
+        const activeMinutes = Math.floor(activeTime % 60);
+        const idleHours = Math.floor(idleTime / 60);
+        const idleMinutes = Math.floor(idleTime % 60);
+
+        return {
+          name: row.userId?.name || row.gxId || "Unknown",
+          login: row.loginTime ? new Date(row.loginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-",
+          logout: row.logoutTime ? new Date(row.logoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Active",
+          active: `${activeHours}h ${activeMinutes}m`,
+          idle: `${idleHours}h ${idleMinutes}m`,
+          status: row.status === 'active' || row.status === 'present' ? 'Present' : 'Inactive',
+          performance: activeTime > 300 ? 'High' : activeTime > 120 ? 'Neutral' : 'Low'
+        };
+      });
+  };
+
+  const handleCalculatePastData = async () => {
+    if (!pastStartDate || !pastEndDate) return;
+    setIsCalculating(true);
+    try {
+      const res = await adminApi.attendance.calculate({ startDate: pastStartDate, endDate: pastEndDate });
+      const rawData = res.data?.records || [];
+      setAttendance(mapAttendanceData(rawData));
+      alert("Past data calculated successfully");
+    } catch (err) {
+      console.error("Failed to calculate past data:", err);
+      alert("Failed to calculate past data");
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  const handleExportPastData = async () => {
+    if (!pastStartDate || !pastEndDate) return;
+    setIsExporting(true);
+    try {
+      const blob = await adminApi.attendance.export(pastStartDate, pastEndDate);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `attendance_export_${pastStartDate}_to_${pastEndDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to export past data:", err);
+      alert("Failed to export data");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
 
   useEffect(() => {
     fetchAttendance();
-    fetchStats();
   }, [date]);
-
-  const fetchStats = async () => {
-    try {
-      const res = await adminApi.dashboard.getSummary();
-      const summary = res.data || {};
-      setStats({
-        activeNow: `${summary.activeEmployeesToday || 0} / ${summary.totalEmployees || 0}`,
-        avgHours: summary.avgWorkingHours || "0h",
-        onLeave: `${summary.employeesOnLeave || 0} Today`,
-        attendance: summary.attendancePercentage || "0%"
-      });
-    } catch (err) {
-      console.error("Failed to fetch tracking stats", err);
-    }
-  };
 
   const fetchAttendance = async () => {
     setLoading(true);
     try {
       const res = await adminApi.attendance.list({ date });
-      const rawData = Array.isArray(res.data) ? res.data : (res.data?.attendance || []);
-      
-      const mappedData = rawData
-        .filter((row: any) => row.userId?.role !== 'ADMIN') // Hide Admin's data
-        .map((row: any) => {
-          const activeHours = Math.floor(row.activeTime / 60);
-          const activeMinutes = Math.floor(row.activeTime % 60);
-          const idleHours = Math.floor(row.idleTime / 60);
-          const idleMinutes = Math.floor(row.idleTime % 60);
+      const rawData = Array.isArray(res.data) ? res.data : (res.data?.attendance || res.data || []);
+      setAttendance(mapAttendanceData(rawData));
 
-          return {
-            name: row.userId?.name || row.gxId || "Unknown",
-            login: row.loginTime ? new Date(row.loginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-",
-            logout: row.logoutTime ? new Date(row.logoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Active",
-            active: `${activeHours}h ${activeMinutes}m`,
-            idle: `${idleHours}h ${idleMinutes}m`,
-            status: row.status === 'active' ? 'Present' : 'Inactive',
-            performance: row.activeTime > 300 ? 'High' : row.activeTime > 120 ? 'Neutral' : 'Low'
-          };
+      if (res.summary) {
+        const sum = res.summary;
+        setStats({
+          activeNow: `${sum.activeNowMembers || 0} / ${sum.totalEmployees || 0}`,
+          avgHours: `${(sum.avgWorkingHoursAll || 0).toFixed(1)}h`,
+          onLeave: `${sum.onLeaveMembers || 0} Today`,
+          attendance: `${Math.round(sum.attendancePercentAll || 0)}%`
         });
-
-      setAttendance(mappedData);
+      }
     } catch (err) {
       console.error("Failed to fetch attendance:", err);
     } finally {
@@ -70,16 +110,67 @@ export function TrackingPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-[#111827]">Employee Tracking</h1>
-          <p className="text-sm text-[#6B7280]">Monitor daily attendance, active hours, and employee performance.</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-black text-[#111827]">Employee Tracking</h1>
+            <p className="text-sm text-[#6B7280]">Monitor daily attendance, active hours, and employee performance.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm font-bold text-[#374151] hover:bg-gray-50">
+              <Calendar className="w-4 h-4" />
+              {new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm font-bold text-[#374151] hover:bg-gray-50">
-            <Calendar className="w-4 h-4" />
-            {new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-          </button>
+
+        {/* Past Data Export Section */}
+        <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <label className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Start Date</label>
+              <input 
+                type="date" 
+                value={pastStartDate}
+                onChange={(e) => setPastStartDate(e.target.value)}
+                className="px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm outline-none" 
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">End Date</label>
+              <input 
+                type="date" 
+                value={pastEndDate}
+                onChange={(e) => setPastEndDate(e.target.value)}
+                className="px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm outline-none" 
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={fetchAttendance}
+              className="px-4 py-2 bg-gray-100 text-[#4B5563] font-bold text-sm rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+            >
+              <Calendar className="w-4 h-4" />
+              View Today
+            </button>
+            <button 
+              onClick={handleCalculatePastData}
+              disabled={isCalculating}
+              className="px-4 py-2 bg-indigo-50 text-[#4F46E5] font-bold text-sm rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-2"
+            >
+              {isCalculating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Clock className="w-4 h-4" />}
+              Calculate Past Data
+            </button>
+            <button 
+              onClick={handleExportPastData}
+              disabled={isExporting}
+              className="px-4 py-2 bg-[#4F46E5] text-white font-bold text-sm rounded-lg hover:bg-[#4338CA] transition-colors flex items-center gap-2"
+            >
+              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowDownRight className="w-4 h-4" />}
+              Export Data
+            </button>
+          </div>
         </div>
       </div>
 

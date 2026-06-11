@@ -11,7 +11,7 @@ interface AddStudentModalProps {
 export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successData, setSuccessData] = useState<{ gxId: string; message: string } | null>(null);
+  const [successData, setSuccessData] = useState<{ gxId: string; password?: string; message: string } | null>(null);
   const [agents, setAgents] = useState<any[]>([]);
 
   const role = localStorage.getItem("userRole") || "ADMIN";
@@ -22,7 +22,18 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
     fullName: "",
     email: "",
     contact: "",
+    alternateContact: "",
     country: "",
+    interestedUniversity: "",
+    interestedLocation: "",
+    interestedProgram: "",
+    educationBackground: "",
+    percentage: "",
+    passingYear: "",
+    loanStatus: "Required",
+    universityType: "Public",
+    intake: "",
+    budgetRange: "",
     assignedAgentGxId: "",
   });
 
@@ -49,7 +60,18 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
       fullName: "",
       email: "",
       contact: "",
+      alternateContact: "",
       country: "",
+      interestedUniversity: "",
+      interestedLocation: "",
+      interestedProgram: "",
+      educationBackground: "",
+      percentage: "",
+      passingYear: "",
+      loanStatus: "Required",
+      universityType: "Public",
+      intake: "",
+      budgetRange: "",
       assignedAgentGxId: "",
     });
     setError("");
@@ -63,19 +85,33 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
 
     try {
       let res: any;
+      const payload = {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.contact,
+        alternateContact: formData.alternateContact,
+        interestedCountry: formData.country,
+        interestedUniversity: formData.interestedUniversity,
+        interestedLocation: formData.interestedLocation,
+        interestedProgram: formData.interestedProgram,
+        educationBackground: formData.educationBackground,
+        percentage: formData.percentage,
+        passingYear: formData.passingYear,
+        loanStatus: formData.loanStatus,
+        universityType: formData.universityType,
+        intake: formData.intake,
+        budgetRange: formData.budgetRange,
+      };
+
       if (isCounsellor) {
-        res = await counsellorApi.createStudent({
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.contact,
-          interestedCountry: formData.country,
-        });
+        res = await counsellorApi.createStudent(payload);
       } else {
-        res = await amApi.students.create(formData);
+        res = await amApi.students.create({ ...payload, assignedAgentGxId: formData.assignedAgentGxId });
       }
       
       setSuccessData({
-        gxId: res.data?.gxId || "GXST" + Math.floor(Math.random() * 1000000),
+        gxId: res.data?.credentials?.gxId || res.data?.student?.gxId || res.data?.gxId || "GXST" + Math.floor(Math.random() * 1000000),
+        password: res.data?.credentials?.password,
         message: "Student record created and assigned successfully."
       });
       if (onSuccess) onSuccess();
@@ -97,9 +133,17 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
             <h2 className="text-2xl font-black text-[#111827] mb-2">Student Enrolled!</h2>
             <p className="text-sm text-[#6B7280] mb-8 font-medium">The student has been assigned a unique GX ID and recorded in your pipeline.</p>
             
-            <div className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl p-6 text-left mb-8">
-               <span className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest block mb-1">Generated Student ID</span>
-               <span className="text-2xl font-black text-[#111827] tracking-tight">{successData.gxId}</span>
+            <div className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl p-6 text-left mb-8 space-y-4">
+              <div>
+                 <span className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest block mb-1">Generated Student ID</span>
+                 <span className="text-2xl font-black text-[#111827] tracking-tight">{successData.gxId}</span>
+              </div>
+              {successData.password && (
+                <div>
+                   <span className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest block mb-1">Temporary Password</span>
+                   <span className="text-2xl font-black text-[#111827] tracking-tight">{successData.password}</span>
+                </div>
+              )}
             </div>
 
             <button
@@ -140,7 +184,7 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Student Full Name *</label>
               <input
@@ -175,6 +219,16 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
               />
             </div>
             <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Alternate Contact</label>
+              <input
+                type="tel"
+                value={formData.alternateContact}
+                onChange={(e) => setFormData({ ...formData, alternateContact: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="Optional"
+              />
+            </div>
+            <div>
               <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Preferred Country *</label>
               <select
                 required
@@ -189,6 +243,111 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
                 <option value="Australia">Australia</option>
                 <option value="Ireland">Ireland</option>
                 <option value="Germany">Germany</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Interested University</label>
+              <input
+                type="text"
+                value={formData.interestedUniversity}
+                onChange={(e) => setFormData({ ...formData, interestedUniversity: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="e.g., University of Oxford"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Interested Location</label>
+              <input
+                type="text"
+                value={formData.interestedLocation}
+                onChange={(e) => setFormData({ ...formData, interestedLocation: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="e.g., Oxford"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Interested Program</label>
+              <input
+                type="text"
+                value={formData.interestedProgram}
+                onChange={(e) => setFormData({ ...formData, interestedProgram: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="e.g., MS in CS"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Education Background</label>
+              <input
+                type="text"
+                value={formData.educationBackground}
+                onChange={(e) => setFormData({ ...formData, educationBackground: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="e.g., B.Tech in IT"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Percentage</label>
+              <input
+                type="text"
+                value={formData.percentage}
+                onChange={(e) => setFormData({ ...formData, percentage: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="e.g., 85%"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Passing Year</label>
+              <input
+                type="text"
+                value={formData.passingYear}
+                onChange={(e) => setFormData({ ...formData, passingYear: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="e.g., 2024"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Intake</label>
+              <input
+                type="text"
+                value={formData.intake}
+                onChange={(e) => setFormData({ ...formData, intake: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="e.g., Fall 2025"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Budget Range</label>
+              <input
+                type="text"
+                value={formData.budgetRange}
+                onChange={(e) => setFormData({ ...formData, budgetRange: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+                placeholder="e.g., ₹20L - ₹30L"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Loan Status</label>
+              <select
+                value={formData.loanStatus}
+                onChange={(e) => setFormData({ ...formData, loanStatus: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+              >
+                <option value="Required">Required</option>
+                <option value="Not Required">Not Required</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Approved">Approved</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">University Type</label>
+              <select
+                value={formData.universityType}
+                onChange={(e) => setFormData({ ...formData, universityType: e.target.value })}
+                className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"
+              >
+                <option value="Public">Public</option>
+                <option value="Private">Private</option>
+                <option value="Any">Any</option>
               </select>
             </div>
           </div>

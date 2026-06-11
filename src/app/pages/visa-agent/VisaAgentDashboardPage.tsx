@@ -104,17 +104,13 @@ export function VisaAgentDashboardPage() {
   ];
 
   const pipelineStages = [
-    { label: "Client Created", count: 12 },
-    { label: "DS160 Pending", count: 5 },
-    { label: "DS160 Submitted", count: 8 },
-    { label: "Portal Created", count: 10 },
-    { label: "Payment Pending", count: 3 },
-    { label: "Payment Completed", count: 15 },
-    { label: "Slot Monitoring", count: 7 },
-    { label: "Slot Booked", count: 4 },
-    { label: "Biometric", count: 2 },
-    { label: "Interview", count: 1 },
-    { label: "Result", count: stats.approved + stats.rejected },
+    { label: "Total Leads", count: stats.totalClients },
+    { label: "DS160 Pending", count: stats.pendingDS160 },
+    { label: "Payment Pending", count: stats.pendingPayments },
+    { label: "Slot Monitoring", count: stats.monitoringCases },
+    { label: "Biometrics", count: stats.upcomingBiometrics },
+    { label: "Interviews", count: stats.upcomingInterviews },
+    { label: "Processed", count: stats.approved + stats.rejected },
   ];
 
   return (
@@ -128,9 +124,6 @@ export function VisaAgentDashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 bg-white border border-[#E5E7EB] rounded-xl text-sm font-bold text-[#4B5563] hover:bg-gray-50 transition-all shadow-sm">
-            Download Report
-          </button>
           <button 
             onClick={() => navigate('/visa-agent/clients/create')}
             className="px-4 py-2 bg-[#111827] text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg flex items-center gap-2"
@@ -174,12 +167,12 @@ export function VisaAgentDashboardPage() {
         </h3>
         <div className="relative">
           <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-100 -translate-y-1/2 hidden lg:block" />
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-11 gap-4 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 relative z-10">
             {pipelineStages.map((stage, i) => (
               <div key={i} className="flex flex-col items-center gap-3 group">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black transition-all ${
                   i === 0 ? 'bg-emerald-600 text-white ring-4 ring-emerald-50' : 
-                  i < 6 ? 'bg-emerald-100 text-emerald-700' :
+                  i < pipelineStages.length - 1 ? 'bg-emerald-100 text-emerald-700' :
                   'bg-gray-100 text-gray-500 group-hover:bg-indigo-50 group-hover:text-indigo-600'
                 }`}>
                   {stage.count}
@@ -337,58 +330,37 @@ export function VisaAgentDashboardPage() {
              )}
            </div>
 
-           {/* Upcoming Dates */}
-           <div className="bg-white rounded-3xl border border-[#E5E7EB] shadow-sm p-6">
-              <h3 className="text-sm font-black text-[#111827] uppercase tracking-widest mb-6">Upcoming Dates</h3>
-              <div className="space-y-4">
-                 {[
-                   { type: 'Biometric', client: 'Rahul Sharma', date: 'Oct 12', time: '10:30 AM', color: 'indigo' },
-                   { type: 'Interview', client: 'Sneha Patil', date: 'Oct 15', time: '09:00 AM', color: 'purple' },
-                   { type: 'Monitoring', client: 'Amit Verma', date: 'Oct 18', time: 'Ongoing', color: 'blue' },
-                 ].map((date, i) => (
-                   <div key={i} className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl bg-${date.color}-50 flex flex-col items-center justify-center text-${date.color}-600`}>
-                        <span className="text-[8px] font-black uppercase">{date.date.split(' ')[0]}</span>
-                        <span className="text-sm font-black leading-none">{date.date.split(' ')[1]}</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-black text-[#111827]">{date.client}</p>
-                        <p className="text-[10px] text-[#6B7280] font-bold">{date.type} • {date.time}</p>
-                      </div>
-                      <button className="p-2 hover:bg-gray-50 rounded-lg">
-                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                      </button>
-                   </div>
-                 ))}
-              </div>
-              <button className="w-full mt-6 py-2.5 border border-[#E5E7EB] rounded-xl text-[10px] font-black text-[#4B5563] uppercase tracking-widest hover:bg-gray-50 transition-all">
-                View Calendar
-              </button>
-           </div>
-
-           {/* Recent Activity */}
+           {/* CRM Manual */}
            <div className="bg-white rounded-3xl border border-[#E5E7EB] shadow-sm p-6">
               <h3 className="text-sm font-black text-[#111827] uppercase tracking-widest mb-6 flex items-center gap-2">
-                <Clock4 className="w-4 h-4 text-emerald-500" />
-                Recent Activity
+                <FileText className="w-4 h-4 text-indigo-500" />
+                Visa Agent Manual
               </h3>
-              <div className="space-y-6 relative">
-                 <div className="absolute top-0 bottom-0 left-3 w-px bg-gray-100" />
-                 {[
-                   { action: 'DS-160 Submitted', client: 'Sneha Patil', time: '2h ago', icon: FileText, color: 'emerald' },
-                   { action: 'Portal Login Created', client: 'Rahul Sharma', time: '4h ago', icon: Users, color: 'blue' },
-                   { action: 'Payment Verified', client: 'Amit Verma', time: '6h ago', icon: CreditCard, color: 'amber' },
-                 ].map((act, i) => (
-                   <div key={i} className="flex items-start gap-4 relative z-10">
-                      <div className={`w-6 h-6 rounded-lg bg-${act.color}-50 border border-${act.color}-100 flex items-center justify-center flex-shrink-0`}>
-                        <act.icon className={`w-3 h-3 text-${act.color}-600`} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-black text-[#111827]">{act.action}</p>
-                        <p className="text-[10px] text-[#6B7280] font-bold">For <span className="text-[#111827]">{act.client}</span> • {act.time}</p>
-                      </div>
-                   </div>
-                 ))}
+              <div className="space-y-4">
+                 <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <h4 className="text-xs font-black text-indigo-900 mb-2">1. Client Management</h4>
+                    <p className="text-[10px] text-indigo-700 font-medium leading-relaxed">
+                       Create new clients using the "Quick Create Client" button. Ensure all required documents are collected before moving the client to the "DS-160 Submitted" stage.
+                    </p>
+                 </div>
+                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                    <h4 className="text-xs font-black text-emerald-900 mb-2">2. Application Processing</h4>
+                    <p className="text-[10px] text-emerald-700 font-medium leading-relaxed">
+                       Update the DS-160 status and Visa Fee Payment status in the Lead Pipeline. Once payments are verified, schedule the biometric and interview appointments.
+                    </p>
+                 </div>
+                 <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                    <h4 className="text-xs font-black text-amber-900 mb-2">3. Slot Monitoring</h4>
+                    <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
+                       Keep an eye on the "Slot Monitoring" pipeline stage. If an earlier slot becomes available, notify the client and reschedule through the portal.
+                    </p>
+                 </div>
+                 <div className="p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                    <h4 className="text-xs font-black text-purple-900 mb-2">4. Support & Communication</h4>
+                    <p className="text-[10px] text-purple-700 font-medium leading-relaxed">
+                       Use the client profile page to track communications. Check the "Urgent Actions" section daily for alerts on missing documents or approaching deadlines.
+                    </p>
+                 </div>
               </div>
            </div>
         </div>

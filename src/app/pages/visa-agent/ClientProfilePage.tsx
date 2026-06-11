@@ -31,6 +31,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import { visaAgentApi } from "../../../lib/api";
 import { toast } from "sonner";
+import { EditClientProcessModal } from "../../components/modals/EditClientProcessModal";
 
 export function ClientProfilePage() {
    const { id } = useParams();
@@ -282,6 +283,10 @@ export function ClientProfilePage() {
             password: ds160Password,
             confirmationNumber: ds160ConfirmationNo
          });
+         
+         // Explicitly update the status to submitted
+         await visaAgentApi.ds160.updateStatus(id!, 'submitted');
+         
          toast.success("DS-160 details updated successfully");
          await fetchClientDetails();
          setShowDS160Modal(false);
@@ -334,7 +339,7 @@ export function ClientProfilePage() {
       if (!confirm("Are you sure you want to mark this process as DONE?")) return;
       setIsUpdating(true);
       try {
-         await visaAgentApi.markDone(id!);
+         await visaAgentApi.screening.markDone(id!);
          toast.success("Process marked as DONE");
          await fetchClientDetails();
       } catch (err: any) {
@@ -367,6 +372,9 @@ export function ClientProfilePage() {
       const url = client.portalCredentials?.portalUrl || 'https://www.google.com/search?q=visa+scheduling+portal+' + client.country;
       window.open(url, '_blank');
    };
+
+   // General Process Modal State
+   const [showGeneralUpdateModal, setShowGeneralUpdateModal] = useState(false);
 
    if (loading) {
       return (
@@ -447,9 +455,12 @@ export function ClientProfilePage() {
                      >
                         {client.manualStatus === 'Done' ? 'Finished' : 'Mark as Done'}
                      </button>
-                     <button className="px-6 py-3 bg-emerald-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/20 flex items-center gap-2">
+                     <button 
+                        onClick={() => setShowGeneralUpdateModal(true)}
+                        className="px-6 py-3 bg-emerald-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/20 flex items-center gap-2"
+                     >
                         <Plus className="w-4 h-4" />
-                        Action
+                        Update Process
                      </button>
                   </div>
                </div>
@@ -548,7 +559,9 @@ export function ClientProfilePage() {
                                  </div>
                                  <div>
                                     <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">DS-160 Status</p>
-                                    <p className="text-base font-black text-[#111827] mt-0.5">{client.ds160Status || 'Pending'}</p>
+                                    <p className="text-base font-black text-[#111827] mt-0.5">
+                                       {client.ds160Status ? client.ds160Status.charAt(0).toUpperCase() + client.ds160Status.slice(1) : 'Pending'}
+                                    </p>
                                  </div>
                               </div>
                               <div className="bg-white p-6 rounded-[32px] border border-[#E5E7EB] shadow-sm flex items-center gap-4">
@@ -557,7 +570,9 @@ export function ClientProfilePage() {
                                  </div>
                                  <div>
                                     <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">Visa Fee Status</p>
-                                    <p className="text-base font-black text-[#111827] mt-0.5">{client.visaFeePaymentStatus || 'Pending'}</p>
+                                    <p className="text-base font-black text-[#111827] mt-0.5">
+                                       {client.paymentTypes?.portalFeeStatus || 'Pending'}
+                                    </p>
                                  </div>
                               </div>
                               <div className="bg-white p-6 rounded-[32px] border border-[#E5E7EB] shadow-sm flex items-center gap-4">
@@ -566,7 +581,9 @@ export function ClientProfilePage() {
                                  </div>
                                  <div>
                                     <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">Slot Status</p>
-                                    <p className="text-base font-black text-[#111827] mt-0.5">{client.slotBookingStatus || 'Pending'}</p>
+                                    <p className="text-base font-black text-[#111827] mt-0.5">
+                                       {(client.biometricDate || client.interviewDate) ? 'Booked' : (client.stage === 'monitoring_slots' ? 'Monitoring' : 'Pending')}
+                                    </p>
                                  </div>
                               </div>
                            </div>
@@ -575,16 +592,47 @@ export function ClientProfilePage() {
                            <div className="bg-white p-8 rounded-[40px] border border-[#E5E7EB] shadow-sm">
                               <div className="flex items-center justify-between mb-8">
                                  <h3 className="text-sm font-black text-[#111827] uppercase tracking-[0.2em]">Application Roadmap</h3>
-                                 <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">40% Completed</span>
+                                 <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">
+                                    {Math.round((
+                                       (1 +
+                                          (client.ds160Status?.toLowerCase() === 'submitted' ? 1 : 0) +
+                                          (client.paymentTypes?.portalFeeStatus?.toLowerCase() === 'paid' ? 1 : 0) +
+                                          ((client.biometricDate || client.interviewDate) ? 1 : 0) +
+                                          (client.interviewStatus?.toLowerCase() === 'completed' || client.approvalStatus ? 1 : 0)) / 5 * 100
+                                    ))}% Completed
+                                 </span>
                               </div>
                               <div className="relative space-y-8">
                                  <div className="absolute top-2 bottom-2 left-3 w-0.5 bg-gray-100" />
                                  {[
-                                    { label: 'Client Created', date: new Date(client.createdAt).toLocaleDateString(), status: 'completed' },
-                                    { label: 'DS-160 Preparation', date: client.ds160Status === 'Pending' ? 'In Progress' : 'Completed', status: client.ds160Status === 'Pending' ? 'active' : 'completed' },
-                                    { label: 'Visa Fee Payment', date: client.visaFeePaymentStatus === 'Pending' ? 'Pending' : 'Completed', status: client.visaFeePaymentStatus === 'Pending' ? 'active' : 'completed' },
-                                    { label: 'Slot Monitoring & Booking', date: client.slotBookingStatus === 'Pending' ? 'Pending' : 'Completed', status: 'pending' },
-                                    { label: 'Visa Interview', date: client.interviewStatus || 'Pending', status: 'pending' }
+                                    { 
+                                       label: 'Client Created', 
+                                       date: new Date(client.createdAt).toLocaleDateString(), 
+                                       status: 'completed' 
+                                    },
+                                    { 
+                                       label: 'DS-160 Preparation', 
+                                       date: client.ds160Status?.toLowerCase() === 'submitted' ? 'Completed' : 'In Progress', 
+                                       status: client.ds160Status?.toLowerCase() === 'submitted' ? 'completed' : 'active' 
+                                    },
+                                    { 
+                                       label: 'Visa Fee Payment', 
+                                       date: client.paymentTypes?.portalFeeStatus?.toLowerCase() === 'paid' ? 'Completed' : 'Pending', 
+                                       status: client.paymentTypes?.portalFeeStatus?.toLowerCase() === 'paid' ? 'completed' : 
+                                               (client.ds160Status?.toLowerCase() === 'submitted' ? 'active' : 'pending') 
+                                    },
+                                    { 
+                                       label: 'Slot Monitoring & Booking', 
+                                       date: (client.biometricDate || client.interviewDate) ? 'Completed' : 'Pending', 
+                                       status: (client.biometricDate || client.interviewDate) ? 'completed' : 
+                                               (client.paymentTypes?.portalFeeStatus?.toLowerCase() === 'paid' ? 'active' : 'pending') 
+                                    },
+                                    { 
+                                       label: 'Visa Interview', 
+                                       date: client.interviewStatus?.toLowerCase() === 'completed' || client.approvalStatus ? 'Completed' : 'Pending', 
+                                       status: client.interviewStatus?.toLowerCase() === 'completed' || client.approvalStatus ? 'completed' : 
+                                               ((client.biometricDate || client.interviewDate) ? 'active' : 'pending') 
+                                    }
                                  ].map((step, i) => (
                                     <div key={i} className="flex items-start gap-6 relative z-10">
                                        <div className={`w-6 h-6 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${step.status === 'completed' ? 'bg-emerald-500' :
@@ -1275,6 +1323,13 @@ export function ClientProfilePage() {
                   </div>
                </div>
             )}
+            {/* General Process Update Modal */}
+            <EditClientProcessModal
+               isOpen={showGeneralUpdateModal}
+               onClose={() => setShowGeneralUpdateModal(false)}
+               client={client}
+               onSuccess={() => fetchClientDetails()}
+            />
          </div>
       </>
    );

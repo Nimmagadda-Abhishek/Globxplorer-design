@@ -46,7 +46,13 @@ export function LoginPage() {
       localStorage.setItem("token", accessToken);
 
       const userData = data.user || data;
-      const actualRole = userData.role || role;
+      // Check multiple locations the backend might put the role
+      const actualRole = (
+        userData.role ||
+        result.role ||
+        data.role ||
+        result.data?.role
+      ) || role;
       localStorage.setItem("userRole", actualRole);
 
       if (userData) {

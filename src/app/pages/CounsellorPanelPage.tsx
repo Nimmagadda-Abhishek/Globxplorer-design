@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { adminApi, userApi } from "../../lib/api";
 
 export function CounsellorPanelPage() {
-  const [counsellors, setCounsellors] = useState<any[]>([]);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const role = localStorage.getItem("userRole");
   const isAdmin = role === "ADMIN";
@@ -16,7 +16,7 @@ export function CounsellorPanelPage() {
     setLoading(true);
     try {
       const res = await adminApi.counsellors.list();
-      setCounsellors(res.data?.counsellors || []);
+      setData(res.data || null);
     } catch (err) {
       console.error("Failed to fetch counsellors:", err);
     } finally {
@@ -26,6 +26,7 @@ export function CounsellorPanelPage() {
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    if (!id) return;
     if (window.confirm("Are you sure you want to delete this counsellor? This action is permanent.")) {
       try {
         await userApi.deleteUser(id);
@@ -36,6 +37,20 @@ export function CounsellorPanelPage() {
       }
     }
   };
+
+  const counsellors = data?.counsellors || [];
+  
+  const totalStudents = counsellors.reduce((acc: number, c: any) => acc + (c.studentsHandled || 0), 0);
+  const avgVisa = counsellors.length 
+    ? counsellors.reduce((acc: number, c: any) => acc + (c.visaSuccess?.ratePercent || 0), 0) / counsellors.length 
+    : 0;
+  const avgDays = counsellors.length 
+    ? counsellors.reduce((acc: number, c: any) => acc + (c.avgProcessing?.avgProcessingDays || 0), 0) / counsellors.length 
+    : 0;
+  const validSatisfaction = counsellors.filter((c: any) => c.satisfaction !== null);
+  const avgSatisfaction = validSatisfaction.length 
+    ? validSatisfaction.reduce((acc: number, c: any) => acc + c.satisfaction, 0) / validSatisfaction.length 
+    : 0;
 
   return (
     <div className="space-y-8 relative">
@@ -51,10 +66,10 @@ export function CounsellorPanelPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Students Handled", value: "0", icon: GraduationCap, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Visa Success", value: "-", icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Avg Processing", value: "-", icon: Clock, color: "text-indigo-600", bg: "bg-indigo-50" },
-          { label: "Satisfaction", value: "-", icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Students Handled", value: totalStudents, icon: GraduationCap, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Visa Success", value: `${avgVisa.toFixed(1)}%`, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
+          { label: "Avg Processing", value: `${avgDays.toFixed(1)} Days`, icon: Clock, color: "text-indigo-600", bg: "bg-indigo-50" },
+          { label: "Satisfaction", value: validSatisfaction.length ? `${avgSatisfaction.toFixed(1)}/5` : "N/A", icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-2xl border border-[#E5E7EB] shadow-sm">
             <div className={`w-10 h-10 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
@@ -69,29 +84,29 @@ export function CounsellorPanelPage() {
       <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm overflow-hidden">
         <h3 className="text-lg font-bold text-[#111827] mb-6">Top Counsellors</h3>
         <div className="space-y-1">
-          {counsellors.map((c, i) => (
+          {counsellors.map((c: any, i: number) => (
             <div key={i} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer group border border-transparent hover:border-[#E5E7EB]">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-[#EEF2FF] rounded-full flex items-center justify-center font-bold text-[#4F46E5]">
+                <div className="w-10 h-10 bg-[#EEF2FF] rounded-full flex items-center justify-center font-bold text-[#4F46E5] uppercase">
                   {c.name ? c.name[0] : "?"}
                 </div>
                 <div>
                   <p className="text-sm font-bold text-[#111827]">{c.name}</p>
-                  <p className="text-[10px] text-[#6B7280] uppercase font-black tracking-widest">{c.totalStudents || 0} Applications</p>
+                  <p className="text-[10px] text-[#6B7280] uppercase font-black tracking-widest">{c.studentsHandled || 0} Applications</p>
                 </div>
               </div>
               <div className="flex items-center gap-12 text-right">
                 <div>
-                  <p className="text-xs font-black text-[#10B981]">{c.successRate || "0%"}</p>
+                  <p className="text-xs font-black text-[#10B981]">{c.visaSuccess?.ratePercent || 0}%</p>
                   <p className="text-[10px] text-[#9CA3AF] font-bold">Success Rate</p>
                 </div>
                 <div>
-                  <p className="text-xs font-black text-[#111827]">{c.avgProcessingTime || "-"}</p>
+                  <p className="text-xs font-black text-[#111827]">{c.avgProcessing?.avgProcessingDays || 0} Days</p>
                   <p className="text-[10px] text-[#9CA3AF] font-bold">Avg. Time</p>
                 </div>
                 {isAdmin && (
                   <button
-                    onClick={(e) => handleDelete(e, c._id)}
+                    onClick={(e) => handleDelete(e, c.counsellorId || c._id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-4"
                     title="Delete Counsellor"
                   >

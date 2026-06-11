@@ -26,7 +26,7 @@ const visaAgentNavGroups = [
     items: [
       { path: "/", label: "Dashboard", icon: LayoutDashboard },
       { path: "/visa-agent/pipeline", label: "Leads Pipeline", icon: KanbanSquare },
-      { path: "/visa-agent/create-client", label: "Create Client", icon: UserPlus },
+      { path: "/visa-agent/clients/create", label: "Create Client", icon: UserPlus },
       { path: "/visa-agent/clients", label: "Clients", icon: Users },
     ]
   },
@@ -62,12 +62,9 @@ const visaAgentNavGroups = [
   {
     group: "Management",
     items: [
-      { path: "/visa-agent/payments", label: "Payments", icon: CreditCard },
-      { path: "/visa-agent/appointments", label: "Appointments", icon: Calendar },
       { path: "/visa-agent/documents", label: "Documents", icon: FileText },
       { path: "/visa-agent/reminders", label: "Reminders", icon: Clock },
       { path: "/visa-agent/notifications", label: "Notifications", icon: Bell },
-      { path: "/visa-agent/analytics", label: "Analytics", icon: BarChart },
     ]
   },
   {

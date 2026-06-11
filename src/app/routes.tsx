@@ -58,6 +58,7 @@ import { StudentAlumniPage } from "./pages/student/StudentAlumniPage";
 import { StudentReferralPage } from "./pages/student/StudentReferralPage";
 import { StudentProfilePage } from "./pages/student/StudentProfilePage";
 import { MyBookingsPage } from "./pages/student/MyBookingsPage";
+import { StudentManualPage } from "./pages/student/StudentManualPage";
 
 // Visa Agent Portal Pages
 import { VisaAgentLayout } from "./components/layouts/VisaAgentLayout";
@@ -66,6 +67,7 @@ import { VisaAgentPipelinePage } from "./pages/visa-agent/VisaAgentPipelinePage"
 import { ClientsListPage } from "./pages/visa-agent/ClientsListPage";
 import { CreateClientPage } from "./pages/visa-agent/CreateClientPage";
 import { ClientProfilePage } from "./pages/visa-agent/ClientProfilePage";
+import { VisaAgentProfilePage } from "./pages/visa-agent/VisaAgentProfilePage";
 import { RemindersPage } from "./pages/visa-agent/RemindersPage";
 import { VisaAgentPaymentsPage } from "./pages/visa-agent/VisaAgentPaymentsPage";
 import { VisaAgentAppointmentsPage } from "./pages/visa-agent/VisaAgentAppointmentsPage";
@@ -128,6 +130,7 @@ export const router = createBrowserRouter([
       { path: "notifications", Component: NotificationsPage },
       { path: "whatsapp-logs", Component: WhatsAppLogsPage },
       { path: "profile", Component: ProfilePage },
+      { path: "my-business", Component: ProfilePage },
       { path: "search-business", Component: SearchBusinessPage },
       
       // User & Team Management
@@ -194,6 +197,7 @@ export const router = createBrowserRouter([
       { path: "referral", Component: StudentReferralPage },
       { path: "notifications", Component: NotificationsPage },
       { path: "profile", Component: StudentProfilePage },
+      { path: "manual", Component: StudentManualPage },
     ],
   },
   {
@@ -215,7 +219,7 @@ export const router = createBrowserRouter([
       { path: "documents", Component: DocumentsPage },
       { path: "analytics", Component: AnalyticsPage },
       { path: "notifications", Component: NotificationsPage },
-      { path: "profile", Component: ProfilePage },
+      { path: "profile", Component: VisaAgentProfilePage },
     ],
   },
   {

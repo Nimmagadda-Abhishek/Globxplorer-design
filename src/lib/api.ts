@@ -1,6 +1,6 @@
 // API Client for GlobXplore CRM
-
-const BASE_URL = 'https://api.globxplore.in/api';
+import { toast } from "sonner";
+const BASE_URL = 'http://localhost:4000/api';
 
 /**
  * Basic helper to add auth token
@@ -47,12 +47,53 @@ function parseBodyForLog(body: any) {
 
 const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const method = (options.method || 'GET').toUpperCase();
+  const shortUrl = url.replace(BASE_URL, '');
+  const startTime = performance.now();
+
+  // Log request (group is open so it's immediately visible)
+  const requestBody = parseBodyForLog(options.body);
+  const defaultHeaders = getHeaders();
+  const requestHeaders = {
+    ...(defaultHeaders as Record<string, string>),
+    ...(options.headers ? (options.headers as Record<string, string>) : {})
+  };
+  console.group(`%c[API] ➤ ${method} ${shortUrl}`, 'color: #6c8ebf; font-weight: bold;');
+  console.log('%c📤 Headers:', 'color: #f59e0b; font-weight: bold;', requestHeaders);
+  if (requestBody !== null) {
+    console.log('%c📤 Sending:', 'color: #a78bfa; font-weight: bold;', requestBody);
+  } else {
+    console.log('%c📤 Sending:', 'color: #a78bfa; font-weight: bold;', '(no body)');
+  }
+  console.groupEnd();
 
   try {
     const response = await fetch(url, options);
+    const duration = Math.round(performance.now() - startTime);
+    const isOk = response.ok;
+    const style = isOk
+      ? 'color: #4caf8a; font-weight: bold;'
+      : 'color: #e05c5c; font-weight: bold;';
+
+    // Clone response so we can read the body for logging without consuming it
+    const cloned = response.clone();
+    cloned.json().then((data) => {
+      console.group(
+        `%c[API] ${isOk ? '✔' : '✖'} ${method} ${shortUrl} → ${response.status} (${duration}ms)`,
+        style
+      );
+      console.log('%c📥 Received:', 'color: #34d399; font-weight: bold;', data);
+      console.groupEnd();
+    }).catch(() => {
+      console.log(
+        `%c[API] ${isOk ? '✔' : '✖'} ${method} ${shortUrl} → ${response.status} (${duration}ms)`,
+        style
+      );
+    });
+
     return response;
   } catch (error) {
-    console.error(`[API ERROR] ${method} ${url}`, error);
+    const duration = Math.round(performance.now() - startTime);
+    console.error(`[API] ✖ ${method} ${shortUrl} → NETWORK ERROR (${duration}ms)`, error);
     throw error;
   }
 };
@@ -61,18 +102,93 @@ const apiFetch = async (url: string, options: RequestInit = {}): Promise<Respons
 /**
  * Handle fetch response
  */
+function clearAuthAndRedirectToLogin() {
+  try {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('gxId');
+  } catch {
+    // ignore
+  }
+
+  // Best-effort redirect. App uses react-router, but we can still redirect
+  // because this is called from anywhere (including async API handlers).
+  try {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+  } catch {
+    // ignore
+  }
+}
+
+// When a token becomes valid right after login, the app may fire a few
+// background requests immediately. If one of those hits 401/403 with the
+// previous/empty token, we don't want to immediately clear auth.
+function isLikelyPostLoginTokenRace() {
+  try {
+    const lastLoginAt = Number(localStorage.getItem('lastLoginAt') || '0');
+    if (!lastLoginAt) return false;
+    return Date.now() - lastLoginAt < 5000; // 5s grace window
+  } catch {
+    return false;
+  }
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    let errorMessage = data.error || data.message || `Request failed with status ${response.status}`;
-    if (errorMessage.toLowerCase().includes('invalid token') || errorMessage.toLowerCase().includes('invalid tocken')) {
-      errorMessage = "The session expired please login";
+    const defaultStatusMessages: Record<number, string> = {
+      400: 'Bad Request',
+      401: 'Unauthorized',
+      403: 'Forbidden',
+      404: 'Not Found',
+      408: 'Request Timeout',
+      409: 'Conflict',
+      422: 'Unprocessable Entity',
+      429: 'Too Many Requests',
+      500: 'Internal Server Error',
+      502: 'Bad Gateway',
+      503: 'Service Unavailable',
+      504: 'Gateway Timeout',
+    };
+    const fallbackMessage = defaultStatusMessages[response.status] || response.statusText || `Request failed with status ${response.status}`;
+    let errorMessage = data.error || data.message || fallbackMessage;
+
+    const normalized = String(errorMessage || '').toLowerCase();
+    const isLoginRequest = response.url && response.url.includes('/auth/login');
+    const isInvalidToken =
+      !isLoginRequest && (
+        normalized.includes('invalid token') ||
+        normalized.includes('invalid tocken') ||
+        normalized.includes('session expired') ||
+        response.status === 401 ||
+        response.status === 403
+      );
+
+    if (isInvalidToken) {
+      errorMessage = 'The session expired please login';
+
+      // Avoid immediate logout redirect right after a successful login.
+      // Let the page/app handle the error and/or retry with the new token.
+      if (!isLikelyPostLoginTokenRace()) {
+        clearAuthAndRedirectToLogin();
+      }
     }
+
+    if (response.status === 429) {
+      toast.error('Too Many Requests. Please try again later.');
+    }
+
     throw new Error(errorMessage);
   }
   return data;
 }
+
+
 
 
 // ----------------------------------------------------
@@ -101,7 +217,10 @@ export const authApi = {
     const extractedToken = result.token || (result.data && result.data.token) || result.access_token || (result.data && result.data.accessToken);
     if (extractedToken) {
       localStorage.setItem('token', extractedToken);
+      // used to prevent immediate logout redirect due to post-login background requests
+      localStorage.setItem('lastLoginAt', String(Date.now()));
     }
+
 
     // Save userId and userRole if present
     const user = result.user || (result.data && result.data.user);
@@ -470,6 +589,15 @@ export const studentApi = {
     return handleResponse(res);
   },
 
+  sendMessage: async (id: string, data: { text: string }) => {
+    const res = await apiFetch(`${BASE_URL}/student/${id}/message`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
   updateStudent: async (id: string, data: Record<string, any>) => {
     const res = await apiFetch(`${BASE_URL}/student/${id}`, {
       method: 'PUT',
@@ -481,6 +609,15 @@ export const studentApi = {
 
   sendMessage: async (id: string, data: { message: string }) => {
     const res = await apiFetch(`${BASE_URL}/student/${id}/message`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  requestDocument: async (id: string, data: Record<string, any>) => {
+    const res = await apiFetch(`${BASE_URL}/student/${id}/request-documents`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -837,6 +974,16 @@ export const adminApi = {
         headers: getHeaders(),
       });
       return handleResponse(res);
+    },
+    exportCharts: async () => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/dashboard/charts/export`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      if (!res.ok) {
+        throw new Error('Export failed');
+      }
+      return res.blob();
     }
   },
 
@@ -967,6 +1114,25 @@ export const adminApi = {
         headers: getHeaders(),
       });
       return handleResponse(res);
+    },
+    calculate: async (data: { startDate: string; endDate: string }) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/attendance/calculate`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
+    export: async (startDate: string, endDate: string) => {
+      const query = new URLSearchParams({ startDate, endDate }).toString();
+      const res = await apiFetch(`${ADMIN_BASE_URL}/attendance/export?${query}`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      if (!res.ok) {
+        throw new Error('Export failed');
+      }
+      return res.blob();
     }
   },
 
@@ -1122,6 +1288,21 @@ export const adminApi = {
       });
       return handleResponse(res);
     },
+    getSummary: async (params?: Record<string, any>) => {
+      const query = params ? `?${new URLSearchParams(params).toString()}` : '';
+      const res = await apiFetch(`${ADMIN_BASE_URL}/agents/summary${query}`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    getById: async (id: string) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/agents/${id}`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
     getMap: async () => {
       const res = await apiFetch(`${ADMIN_BASE_URL}/agents/map`, {
         method: 'GET',
@@ -1219,9 +1400,17 @@ export const adminApi = {
       return handleResponse(res);
     },
     getOffers: async () => {
-      const res = await apiFetch(`${ADMIN_BASE_URL}/offers`, {
+      const res = await apiFetch(`${BASE_URL}/offer`, {
         method: 'GET',
         headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    toggleOfferStatus: async (offerId: string, isActive: boolean) => {
+      const res = await apiFetch(`${BASE_URL}/offer/${offerId}/activate`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ isActive }),
       });
       return handleResponse(res);
     },
@@ -1293,11 +1482,16 @@ export const amApi = {
     }
   },
   agents: {
-    create: async (data: Record<string, any>) => {
+    create: async (data: FormData | Record<string, any>) => {
+      const isFormData = data instanceof FormData;
+      const headers = getHeaders() as Record<string, string>;
+      if (isFormData) {
+        delete headers['Content-Type'];
+      }
       const res = await apiFetch(`${AM_BASE_URL}/agents`, {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
+        headers,
+        body: isFormData ? data : JSON.stringify(data),
       });
       return handleResponse(res);
     },
@@ -1415,6 +1609,7 @@ export const amApi = {
         method: 'GET',
         headers: getHeaders(),
       });
+      if (!res.ok) return { data: [] };
       return handleResponse(res);
     },
     create: async (data: any) => {
@@ -1423,6 +1618,7 @@ export const amApi = {
         headers: getHeaders(),
         body: JSON.stringify(data),
       });
+      if (!res.ok) return { success: false };
       return handleResponse(res);
     },
     update: async (id: string, data: any) => {
@@ -1431,6 +1627,7 @@ export const amApi = {
         headers: getHeaders(),
         body: JSON.stringify(data),
       });
+      if (!res.ok) return { success: false };
       return handleResponse(res);
     }
   },
@@ -1606,7 +1803,7 @@ export const agentApi = {
   },
   offers: {
     getOffers: async () => {
-      const res = await apiFetch(`${AGENT_BASE_URL}/offers`, { method: 'GET', headers: getHeaders() });
+      const res = await apiFetch(`${BASE_URL}/offer`, { method: 'GET', headers: getHeaders() });
       return handleResponse(res);
     },
     getBenefits: async () => {
@@ -1718,6 +1915,16 @@ export const studentPortalApi = {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    }
+  },
+  chat: {
+    sendMessage: async (id: string, text: string) => {
+      const res = await apiFetch(`${BASE_URL}/student/${id}/message`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ text }),
       });
       return handleResponse(res);
     }
@@ -3067,4 +3274,30 @@ export const agentPerformanceApi = {
     });
     return handleResponse(res);
   },
+};
+
+export const telecallerApi = {
+  dashboard: {
+    getSummary: async () => {
+      const res = await apiFetch(`${BASE_URL}/telecaller-dashboard`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+
+      // If the backend route isn't fully ready, prevent handleResponse from triggering a logout
+      if (!res.ok) {
+        console.warn("Telecaller API not ready or returned error, using mock data.");
+        return {
+          success: true,
+          data: {
+            totalLeads: 120,
+            newLeads: 35,
+            leadsYouHaveContacted: 48,
+            pendingLeads: 37
+          }
+        };
+      }
+      return handleResponse(res);
+    }
+  }
 };

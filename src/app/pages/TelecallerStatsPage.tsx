@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { adminApi } from "../../lib/api";
 
 export function TelecallerStatsPage() {
-  const [telecallers, setTelecallers] = useState<any[]>([]);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,13 +14,22 @@ export function TelecallerStatsPage() {
     setLoading(true);
     try {
       const res = await adminApi.telecallers.list();
-      setTelecallers(res.data?.telecallers || []);
+      setData(res.data || null);
     } catch (err) {
       console.error("Failed to fetch telecallers:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  const totalCalls = data?.telecallers?.reduce((acc: number, tc: any) => acc + (tc.stats?.totalCalls || 0), 0) || 0;
+  const interested = data?.telecallers?.reduce((acc: number, tc: any) => acc + (tc.stats?.intrested || 0), 0) || 0;
+  const notInterested = data?.telecallers?.reduce((acc: number, tc: any) => acc + (tc.stats?.notIntrested || 0), 0) || 0;
+  const callAgain = data?.telecallers?.reduce((acc: number, tc: any) => acc + (tc.stats?.callAgain || 0), 0) || 0;
+
+  const targetPercent = data?.target?.achievedPercent || 0;
+  const dailyTarget = data?.target?.dailyTargetCalls || 150;
+  const leaderboard = data?.leaderboard || [];
 
   return (
     <div className="space-y-8 relative">
@@ -36,10 +45,10 @@ export function TelecallerStatsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Total Calls", value: "0", icon: PhoneCall, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Interested", value: "0", icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Not Interested", value: "0", icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
-          { label: "Call Again", value: "0", icon: Clock, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Total Calls", value: totalCalls, icon: PhoneCall, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Interested", value: interested, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
+          { label: "Not Interested", value: notInterested, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+          { label: "Call Again", value: callAgain, icon: Clock, color: "text-orange-600", bg: "bg-orange-50" },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-2xl border border-[#E5E7EB] shadow-sm flex items-center gap-4">
             <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center`}>
@@ -57,23 +66,23 @@ export function TelecallerStatsPage() {
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
           <h3 className="text-lg font-bold text-[#111827] mb-6">Leaderboard - Week</h3>
           <div className="space-y-4">
-            {telecallers.map((tc, i) => (
+            {leaderboard.map((tc: any, i: number) => (
               <div key={i} className="flex items-center gap-4 p-4 bg-[#F9FAFB] rounded-xl border border-[#E5E7EB]">
                 <span className="text-lg font-black text-[#4F46E5]">#{i + 1}</span>
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-[#E5E7EB] font-bold">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-[#E5E7EB] font-bold uppercase">
                    {tc.name ? tc.name[0] : "?"}
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-[#111827]">{tc.name}</p>
-                  <p className="text-xs text-[#6B7280]">{tc.totalCallsToday || 0} Calls Today</p>
+                  <p className="text-xs text-[#6B7280]">{tc.stats?.totalCalls || 0} Calls Today</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-black text-[#10B981]">{tc.successRate || "0%"}</p>
+                  <p className="text-sm font-black text-[#10B981]">{tc.stats?.target?.achievedPercent || 0}%</p>
                   <p className="text-[10px] text-[#9CA3AF] uppercase font-bold">Success</p>
                 </div>
               </div>
             ))}
-            {telecallers.length === 0 && !loading && (
+            {leaderboard.length === 0 && !loading && (
               <div className="py-12 text-center text-[#9CA3AF] font-bold">No telecallers found.</div>
             )}
           </div>
@@ -83,10 +92,10 @@ export function TelecallerStatsPage() {
           <h3 className="text-lg font-bold text-[#111827] mb-6">Daily Target Status</h3>
           <div className="flex-1 flex flex-col items-center justify-center py-8">
             <div className="w-32 h-32 rounded-full border-[12px] border-[#F3F4F6] border-t-[#4F46E5] flex items-center justify-center relative">
-               <span className="text-2xl font-black text-[#111827]">0%</span>
+               <span className="text-2xl font-black text-[#111827]">{targetPercent}%</span>
             </div>
             <p className="mt-6 text-sm font-bold text-[#111827]">Average Completion Rate</p>
-            <p className="text-xs text-[#6B7280]">Target: 150 calls / day</p>
+            <p className="text-xs text-[#6B7280]">Target: {dailyTarget} calls / day</p>
           </div>
         </div>
       </div>

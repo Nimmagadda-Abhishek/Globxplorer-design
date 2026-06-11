@@ -13,8 +13,8 @@ export function AlertsPage() {
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const res = await adminApi.system.getAlerts();
-      const alertsData = res.data?.alerts || (Array.isArray(res.data) ? res.data : []);
+      const res: any = await adminApi.system.getAlerts();
+      const alertsData = res.alerts || res.data?.alerts || (Array.isArray(res.data) ? res.data : []) || [];
       setAlerts(alertsData);
     } catch (err) {
       console.error("Failed to fetch alerts:", err);
@@ -31,12 +31,12 @@ export function AlertsPage() {
           <h1 className="text-2xl font-black text-[#111827]">Alerts & Reminders</h1>
           <p className="text-sm text-[#6B7280]">Stay updated with critical system alerts and pending tasks.</p>
         </div>
-        <button 
+        <button
           onClick={fetchAlerts}
           disabled={loading}
           className="p-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#6B7280] hover:bg-gray-50 disabled:opacity-50"
         >
-           <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -75,31 +75,19 @@ export function AlertsPage() {
             <div key={i} className="p-6 hover:bg-gray-50 transition-colors group">
               <div className="flex items-start justify-between">
                 <div className="flex gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    alert.priority === 'High' ? 'bg-red-50 text-red-500' : alert.priority === 'Medium' ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${alert.priority === 'High' ? 'bg-red-50 text-red-500' : alert.priority === 'Medium' ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'
+                    }`}>
                     {alert.type === 'Follow-up' ? <Clock className="w-5 h-5" /> : alert.type === 'Call' ? <PhoneOff className="w-5 h-5" /> : alert.type === 'Deadline' ? <AlertTriangle className="w-5 h-5" /> : <BellRing className="w-5 h-5" />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="text-sm font-bold text-[#111827]">{alert.title}</h4>
-                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
-                        alert.priority === 'High' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-500'
-                      }`}>{alert.priority} Priority</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${alert.priority === 'High' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-500'
+                        }`}>{alert.priority} Priority</span>
                     </div>
                     <p className="text-xs text-[#6B7280]">{alert.desc}</p>
                     <p className="text-[10px] text-[#9CA3AF] mt-2 font-bold">{alert.time}</p>
                   </div>
-                </div>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <button className="flex items-center gap-2 px-3 py-1.5 bg-[#4F46E5] text-white rounded-lg text-[10px] font-bold">
-                     <Send className="w-3 h-3" />
-                     Send Reminder
-                   </button>
-                   <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#E5E7EB] text-[#374151] rounded-lg text-[10px] font-bold">
-                     <UserPlus className="w-3 h-3" />
-                     Reassign
-                   </button>
                 </div>
               </div>
             </div>

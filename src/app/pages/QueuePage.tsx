@@ -33,10 +33,29 @@ export function QueuePage() {
       setLoading(true);
       const res: any = await leadApi.getLeadQueue();
       const data = res.data || res;
+      let newLeads = data.newLeads || [];
+      let missedFollowups = data.missedFollowups || [];
+      let oldLeads = data.oldLeads || [];
+
+      // If the backend returned a flat array, we filter it locally
+      if (Array.isArray(data)) {
+        newLeads = data.filter((l: any) => !l.status || l.status === "New");
+        
+        missedFollowups = data.filter((l: any) => {
+          if (l.status === "Call not answered") return true;
+          if (l.status === "Follow-up scheduled" && l.followUpDate) {
+            return new Date(l.followUpDate).getTime() < new Date().getTime();
+          }
+          return false;
+        });
+
+        oldLeads = data; // Total Queue shows all leads
+      }
+
       setQueue({
-        newLeads: data.newLeads || [],
-        missedFollowups: data.missedFollowups || [],
-        oldLeads: data.oldLeads || []
+        newLeads,
+        missedFollowups,
+        oldLeads
       });
     } catch (err) {
       console.error("Failed to fetch queue", err);
@@ -213,14 +232,15 @@ export function QueuePage() {
 function CallLogModal({ lead, onClose, onSuccess }: { lead: any, onClose: () => void, onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    name: lead.name || "",
+    email: lead.email || "",
+    phone: lead.phone || "",
     status: lead.status || "Contacted",
     notes: "",
     followUpDate: "",
-    qualificationDetails: {
-      appliedCourse: "",
-      academicBackground: "",
-      countryPreference: ""
-    }
+    country: lead.country || "",
+    course: lead.course || "",
+    intake: lead.intake || ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -254,8 +274,35 @@ function CallLogModal({ lead, onClose, onSuccess }: { lead: any, onClose: () => 
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Name</label>
+              <input 
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Email</label>
+              <input 
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Phone</label>
+              <input 
+                type="text"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+            </div>
             <div>
               <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Update Status</label>
               <select 
@@ -293,19 +340,25 @@ function CallLogModal({ lead, onClose, onSuccess }: { lead: any, onClose: () => 
 
           <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-3">
             <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest flex items-center gap-2">
-              <UserPlus className="w-3 h-3" /> Qualification Details
+              <UserPlus className="w-3 h-3" /> Lead Details
             </p>
             <div className="grid grid-cols-1 gap-3">
               <input 
-                placeholder="Applied Course"
-                value={formData.qualificationDetails.appliedCourse}
-                onChange={(e) => setFormData({...formData, qualificationDetails: {...formData.qualificationDetails, appliedCourse: e.target.value}})}
+                placeholder="Country"
+                value={formData.country}
+                onChange={(e) => setFormData({...formData, country: e.target.value})}
                 className="w-full px-4 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"
               />
               <input 
-                placeholder="Academic Background (e.g. B.Tech, 8.5 CGPA)"
-                value={formData.qualificationDetails.academicBackground}
-                onChange={(e) => setFormData({...formData, qualificationDetails: {...formData.qualificationDetails, academicBackground: e.target.value}})}
+                placeholder="Course (e.g. MBA)"
+                value={formData.course}
+                onChange={(e) => setFormData({...formData, course: e.target.value})}
+                className="w-full px-4 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <input 
+                placeholder="Intake (e.g. 2026)"
+                value={formData.intake}
+                onChange={(e) => setFormData({...formData, intake: e.target.value})}
                 className="w-full px-4 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"
               />
             </div>

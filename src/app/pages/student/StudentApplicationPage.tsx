@@ -2,6 +2,50 @@ import { CheckCircle2, Clock, MapPin, GraduationCap, Plane, Award, Landmark, Fil
 import { useState, useEffect } from "react";
 import { studentPortalApi } from "../../../lib/api";
 
+const getNextSteps = (stage: string) => {
+  switch(stage) {
+    case 'New':
+      return [
+        { task: "Complete Profile", desc: "Fill out your remaining profile details.", icon: FileText },
+        { task: "Schedule Counseling", desc: "Book your first session with a counsellor.", icon: Calendar }
+      ];
+    case 'Counseling':
+      return [
+        { task: "Attend Session", desc: "Join the scheduled counseling session.", icon: MessageSquare },
+        { task: "Provide Documents", desc: "Upload initial academic documents.", icon: FileCheck }
+      ];
+    case 'Shortlisting':
+      return [
+        { task: "Review Options", desc: "Check the universities shortlisted by your counsellor.", icon: Search },
+        { task: "Finalize Choices", desc: "Select the universities to apply to.", icon: CheckCircle2 }
+      ];
+    case 'Application':
+      return [
+        { task: "Submit Documents", desc: "Upload SOP, LORs, and other application documents.", icon: FileText },
+        { task: "Pay Application Fees", desc: "Complete payment for university applications.", icon: Landmark }
+      ];
+    case 'Offer Letter':
+      return [
+        { task: "Review Offer", desc: "Check the terms of your admission offer.", icon: Search },
+        { task: "Accept Offer", desc: "Sign and submit your acceptance.", icon: Award },
+      ];
+    case 'Visa Process':
+      return [
+        { task: "Prepare Visa Docs", desc: "Gather financial and identity documents for visa.", icon: FileCheck },
+        { task: "Schedule Interview", desc: "Book your visa interview slot.", icon: Calendar }
+      ];
+    case 'Enrolled':
+      return [
+        { task: "Book Flights", desc: "Arrange your travel to the destination.", icon: Plane },
+        { task: "Find Accommodation", desc: "Secure housing near your university.", icon: MapPin }
+      ];
+    default:
+      return [
+        { task: "Awaiting Update", desc: "Please wait for your counsellor to assign the next tasks.", icon: Clock }
+      ];
+  }
+};
+
 export function StudentApplicationPage() {
   const [loading, setLoading] = useState(true);
   const [statusData, setStatusData] = useState<any>(null);
@@ -41,7 +85,7 @@ export function StudentApplicationPage() {
               description: `Your application is currently at the ${currentStage || 'initial'} stage. Our team is working on the next steps.`, 
               actionText: "View Documents" 
             }, 
-            nextSteps: [] 
+            nextSteps: getNextSteps(currentStage) 
           });
         } else {
           setStatusData(null);

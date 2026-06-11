@@ -1,4 +1,4 @@
-import { Gift, Plane, Home, GraduationCap, DollarSign, Heart, CheckCircle2, XCircle, Clock, Loader2, Plus, X } from "lucide-react";
+import { Gift, Globe, Calendar, CheckCircle2, XCircle, Loader2, Plus, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { adminApi, configApi } from "../../lib/api";
 
@@ -30,11 +30,23 @@ export function PartnerOffersPage() {
     setLoading(true);
     try {
       const res = await adminApi.system.getOffers();
-      setOffers(res.data?.offers || []);
+      // API returns { success: true, data: [...] }
+      const raw = res.data;
+      setOffers(Array.isArray(raw) ? raw : []);
     } catch (err) {
       console.error("Failed to fetch partner offers:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (offerId: string, isActive: boolean) => {
+    try {
+      await adminApi.system.toggleOfferStatus(offerId, isActive);
+      fetchOffers();
+    } catch (err: any) {
+      console.error("Failed to toggle offer status:", err);
+      alert(err.message || "Failed to update offer status");
     }
   };
 
@@ -112,56 +124,94 @@ export function PartnerOffersPage() {
         )}
       </div>
 
-      {/* Grid List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Offers Banners */}
+      <div className="flex flex-col gap-5">
         {offers.length === 0 && !loading && (
-          <div className="col-span-full py-20 text-center text-[#9CA3AF] font-bold">No partner offers found.</div>
+          <div className="py-20 text-center bg-white rounded-2xl border border-dashed border-[#E5E7EB]">
+            <Gift className="w-12 h-12 text-[#CBD5E1] mx-auto mb-3" />
+            <p className="text-sm font-bold text-[#9CA3AF]">No partner offers found.</p>
+          </div>
         )}
 
-        {offers.map((offer, i) => (
-          <div
-            key={i}
-            onClick={() => window.open('https://GlobXplore.com', '_blank')}
-            className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden group hover:border-[#4F46E5] transition-all cursor-pointer"
-          >
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div className="p-3 bg-[#EEF2FF] rounded-xl text-[#4F46E5]">
-                  {offer.category === "Edu Loans" ? <DollarSign className="w-6 h-6" /> : offer.category === "Flights" ? <Plane className="w-6 h-6" /> : <Home className="w-6 h-6" />}
+        {offers.map((offer, i) => {
+          const isExpired = offer.expiresAt && new Date(offer.expiresAt) < new Date();
+          const isActive = offer.isActive && !isExpired;
+          const expiryDate = offer.expiresAt ? new Date(offer.expiresAt) : null;
+          const daysLeft = expiryDate
+            ? Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+            : null;
+
+          return (
+            <div
+              key={offer._id || i}
+              className={`relative bg-white rounded-2xl border overflow-hidden shadow-sm transition-all hover:shadow-md ${
+                isActive ? "border-indigo-200" : "border-[#E5E7EB] opacity-70"
+              }`}
+            >
+              {/* Gradient Banner Strip */}
+              <div className={`h-2 w-full ${isActive ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" : "bg-gradient-to-r from-gray-300 to-gray-400"}`} />
+
+              <div className="p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
+                {/* Icon */}
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-md ${isActive ? "bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-200" : "bg-gray-100"}`}>
+                  <Gift className={`w-7 h-7 ${isActive ? "text-white" : "text-gray-400"}`} />
                 </div>
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${offer.status === "Active" ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"
-                  }`}>
-                  {offer.status}
-                </span>
-              </div>
-              <h4 className="text-lg font-black text-[#111827] mb-1">{offer.partner || offer.title}</h4>
-              <p className="text-xs font-bold text-[#6B7280] mb-6 tracking-wide uppercase">{offer.category || offer.countryTarget || "Global"}</p>
-              <div className="bg-[#F9FAFB] p-4 rounded-xl mb-6">
-                <p className="text-sm font-bold text-[#4F46E5]">{offer.offer || offer.description}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#9CA3AF]">
-                  <Clock className="w-3.5 h-3.5" />
-                  {offer.expires || (offer.expiresAt ? new Date(offer.expiresAt).toLocaleDateString() : "No expiry")}
+
+                {/* Content */}
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="text-lg font-black text-[#111827]">{offer.title}</h3>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      isActive ? "bg-green-50 text-green-600 border border-green-100" : "bg-gray-100 text-gray-500 border border-gray-200"
+                    }`}>
+                      {isActive ? "Active" : isExpired ? "Expired" : "Inactive"}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-[#6B7280] mb-4 leading-relaxed">{offer.description}</p>
+
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-xs text-[#6B7280] font-medium">
+                      <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Target: <span className="font-bold text-[#374151]">{offer.countryTarget || "Global"}</span></span>
+                    </div>
+                    {expiryDate && (
+                      <div className="flex items-center gap-1.5 text-xs text-[#6B7280] font-medium">
+                        <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>
+                          Expires: <span className="font-bold text-[#374151]">{expiryDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          {daysLeft !== null && isActive && (
+                            <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-black ${daysLeft <= 3 ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"}`}>
+                              {daysLeft === 0 ? "Expires today" : `${daysLeft}d left`}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={(e) => { e.stopPropagation(); alert('Marked as Inactive'); }}
+                    onClick={(e) => { e.stopPropagation(); handleToggleStatus(offer._id, false); }}
                     className="p-2 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Deactivate"
                   >
                     <XCircle className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); alert('Marked as Active'); }}
+                    onClick={(e) => { e.stopPropagation(); handleToggleStatus(offer._id, true); }}
                     className="p-2 text-[#9CA3AF] hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    title="Activate"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Elegant Dialog Box (Modal) */}

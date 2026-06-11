@@ -20,7 +20,12 @@ export function ApplicationStatusPage() {
           agentApi.students.getStatusSummary().catch(() => ({ data: null })),
           agentApi.students.list().catch(() => ({ data: [] }))
         ]);
-        if (summaryRes?.data) setSummary(summaryRes.data);
+        if (studentsRes?.data?.stats) {
+          setSummary(studentsRes.data.stats);
+        } else if (summaryRes?.data) {
+          setSummary(summaryRes.data);
+        }
+        
         if (studentsRes?.data) {
           const studentsArray = Array.isArray(studentsRes.data) ? studentsRes.data : (studentsRes.data.students || []);
           setStudents(studentsArray);
@@ -68,27 +73,27 @@ export function ApplicationStatusPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm text-center">
           <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Total Leads</p>
-          <h4 className="text-2xl font-black text-[#111827]">{summary?.lead || summary?.Lead || "0"}</h4>
+          <h4 className="text-2xl font-black text-[#111827]">{summary?.totalStudents || summary?.lead || summary?.Lead || "0"}</h4>
         </div>
         <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm text-center">
           <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Qualified</p>
-          <h4 className="text-2xl font-black text-[#4F46E5]">{summary?.qualified || summary?.Qualified || "0"}</h4>
+          <h4 className="text-2xl font-black text-[#4F46E5]">{summary?.totalLeadsQualified || summary?.qualified || summary?.Qualified || "0"}</h4>
         </div>
         <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm text-center">
           <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">App Started</p>
-          <h4 className="text-2xl font-black text-indigo-600">{summary?.appStarted || summary?.["Application Started"] || "0"}</h4>
+          <h4 className="text-2xl font-black text-indigo-600">{summary?.applicationStarted || summary?.appStarted || summary?.["Application Started"] || "0"}</h4>
         </div>
         <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm text-center">
           <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Offer Received</p>
-          <h4 className="text-2xl font-black text-orange-500">{summary?.offer || summary?.["Offer Received"] || "0"}</h4>
+          <h4 className="text-2xl font-black text-orange-500">{summary?.offerReceived || summary?.offer || summary?.["Offer Received"] || "0"}</h4>
         </div>
         <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm text-center">
           <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Visa Filed</p>
-          <h4 className="text-2xl font-black text-blue-500">{summary?.visaFiled || summary?.["Visa Filed"] || "0"}</h4>
+          <h4 className="text-2xl font-black text-blue-500">{summary?.activeApplications || summary?.visaFiled || summary?.["Visa Filed"] || "0"}</h4>
         </div>
         <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] shadow-sm text-center">
           <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Approved</p>
-          <h4 className="text-2xl font-black text-green-500">{summary?.approved || summary?.Approved || "0"}</h4>
+          <h4 className="text-2xl font-black text-green-500">{summary?.approved || summary?.visaApproved || summary?.Approved || "0"}</h4>
         </div>
       </div>
 

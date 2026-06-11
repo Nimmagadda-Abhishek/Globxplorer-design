@@ -26,7 +26,8 @@ import {
   ChevronRight,
   Loader2,
   UserPlus,
-  Users2
+  Users2,
+  BookOpen
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
@@ -234,31 +235,39 @@ export function AgentManagerDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F3F4F6]">
-                {agents.map((agent, i) => (
-                  <tr key={agent.gxId || i} className="hover:bg-gray-50 transition-colors group">
-                    <td className="px-5 py-4">
-                      <div>
-                        <p className="text-sm font-black text-[#111827]">
-                          {agent.agentDetails?.businessName || agent.businessName || agent.name || "Unnamed Business"}
-                        </p>
-                        <p className="text-[10px] text-[#6B7280]">
-                          {agent.gxId} • {agent.agentDetails?.businessOwnerName || agent.businessOwnerName || agent.owner || "No Owner"}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${agent.status === 'confirmed' || agent.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'
-                        }`}>{agent.status || 'not_visited'}</span>
-                    </td>
-                    <td className="px-5 py-4 text-xs font-bold text-[#6B7280]">{agent.lastVisit || 'No visit yet'}</td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button className="p-1.5 hover:bg-indigo-50 hover:text-[#4F46E5] rounded-lg transition-colors"><Plus className="w-4 h-4" /></button>
-                        <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"><MoreHorizontal className="w-4 h-4 text-[#9CA3AF]" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {agents.map((agent, i) => {
+                  const statusHistory = agent.agentDetails?.statusHistory || [];
+                  const lastVisitDate = statusHistory.length > 0 
+                    ? new Date(statusHistory[statusHistory.length - 1].date).toLocaleDateString()
+                    : (agent.updatedAt ? new Date(agent.updatedAt).toLocaleDateString() : 'No visit yet');
+                  const currentStatus = agent.agentDetails?.agentStatus || agent.status || 'not_visited';
+                  
+                  return (
+                    <tr key={agent.gxId || agent._id || i} className="hover:bg-gray-50 transition-colors group">
+                      <td className="px-5 py-4">
+                        <div>
+                          <p className="text-sm font-black text-[#111827]">
+                            {agent.agentDetails?.businessName || agent.businessName || "Unnamed Business"}
+                          </p>
+                          <p className="text-[10px] text-[#6B7280]">
+                            {agent.gxId} • {agent.name || agent.agentDetails?.customerWhatsappNumber || "No Owner"}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${currentStatus === 'confirmed' || currentStatus === 'active' || currentStatus === 'partnered' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'
+                          }`}>{currentStatus.replace('_', ' ')}</span>
+                      </td>
+                      <td className="px-5 py-4 text-xs font-bold text-[#6B7280]">{lastVisitDate}</td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button className="p-1.5 hover:bg-indigo-50 hover:text-[#4F46E5] rounded-lg transition-colors"><Plus className="w-4 h-4" /></button>
+                          <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"><MoreHorizontal className="w-4 h-4 text-[#9CA3AF]" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {agents.length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-5 py-8 text-center text-xs font-bold text-[#9CA3AF]">No agents found.</td>
@@ -407,107 +416,116 @@ export function AgentManagerDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* SECTION 8: RECENT ACTIVITY FEED */}
-        <div className="lg:col-span-1 space-y-4">
-          <h3 className="text-lg font-black text-[#111827] flex items-center gap-2">
-            <History className="w-5 h-5 text-indigo-500" />
-            Recent Activity
+      {/* SECTION 8: WEBSITE MANUAL */}
+      <div className="bg-white rounded-3xl border border-[#E5E7EB] shadow-sm overflow-hidden mb-8 mt-8">
+        <div className="p-8 border-b border-[#F3F4F6] bg-gradient-to-r from-indigo-50 to-white">
+          <h3 className="text-2xl font-black text-[#111827] flex items-center gap-3">
+            <BookOpen className="w-6 h-6 text-[#4F46E5]" />
+            Agent Manager Operations Manual
           </h3>
-          <div className="bg-white rounded-3xl border border-[#E5E7EB] shadow-sm p-6 relative">
-            <div className="absolute left-[35px] top-6 bottom-6 w-px bg-[#F1F5F9]" />
-            <div className="space-y-6 relative">
-              {activities.length > 0 ? activities.map((item, i) => (
-                <div key={i} className="flex gap-4">
-                  <div className={`w-10 h-10 ${item.type === 'agent' ? 'bg-blue-500' :
-                      item.type === 'student' ? 'bg-purple-500' : 'bg-green-500'
-                    } rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-50 z-10`}>
-                    {item.type === 'agent' ? <Plus className="w-5 h-5" /> :
-                      item.type === 'student' ? <User className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-[#111827]">{item.action || item.description || "Activity"}</p>
-                    <p className="text-xs text-[#4F46E5] font-black uppercase mt-0.5">{item.target || item.gxId || item.title || "Record"}</p>
-                    <p className="text-[10px] text-[#9CA3AF] mt-1">{item.time || item.createdAt || 'Recently'}</p>
-                  </div>
-                </div>
-              )) : (
-                <p className="text-xs text-center text-[#6B7280] py-10">No recent activity found.</p>
-              )}
-            </div>
-          </div>
+          <p className="text-sm font-medium text-[#6B7280] mt-2">
+            Your comprehensive guide to mastering the platform, maximizing performance, and managing your field network effectively.
+          </p>
         </div>
-
-        {/* SECTION 9: SMART SEARCH & QUICK ACTIONS */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white p-8 rounded-3xl border border-[#E5E7EB] shadow-sm bg-gradient-to-br from-white to-indigo-50/30">
-            <h3 className="text-xl font-black text-[#111827] mb-6">Smart Search Panel</h3>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
-              <input
-                type="text"
-                placeholder="Search by Business Name, Owner, GX ID or Phone..."
-                className="w-full pl-12 pr-4 py-4 bg-white border border-[#E5E7EB] rounded-2xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-[#4F46E5] transition-all shadow-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            {searchQuery.length > 3 && (
-              <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex gap-4 animate-in fade-in slide-in-from-top-2">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600">
-                  <AlertCircle className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-orange-900">Duplicate Business Detected!</p>
-                  <p className="text-xs text-orange-700 font-medium">GXAG123456 - ABC Travels already exists. Visited before on 20 Apr.</p>
-                  <button
-                    onClick={() => navigate(`/agents/GXAG123456`)}
-                    className="mt-2 text-xs font-black text-orange-900 underline uppercase tracking-wider"
-                  >
-                    View Original Record
-                  </button>
+        
+        <div className="p-8 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {/* Feature 1 */}
+            <div className="flex gap-4 p-6 rounded-2xl border border-blue-100 bg-blue-50/50 hover:bg-blue-50 transition-colors">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+                <Users className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-base font-black text-[#111827] mb-1">Agent Network Management</h4>
+                <p className="text-[10px] font-black text-blue-600 mb-3 uppercase tracking-widest">Core Feature</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Step:</strong> Use the "My Agents" panel to add new businesses. Monitor their status (Active, Visited) and track your last field visit.
+                  </p>
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Benefit:</strong> Ensures a clear overview of your network health and quick identification of dormant partners requiring follow-ups.
+                  </p>
                 </div>
               </div>
-            )}
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-              {[
-                { label: "Add Agent", icon: Plus, path: '/agent-panel' },
-                { label: "Add Lead", icon: UserPlus, path: '/pipeline' },
-                { label: "Export Report", icon: FileText, path: '/reports' },
-                { label: "Send Reminder", icon: Bell, path: '/notifications' },
-              ].map((btn, i) => (
-                <button
-                  key={i}
-                  onClick={() => navigate(btn.path)}
-                  className="flex flex-col items-center gap-3 p-4 bg-white border border-[#E5E7EB] rounded-2xl hover:border-[#4F46E5] hover:shadow-lg transition-all group"
-                >
-                  <div className="w-10 h-10 bg-[#F9FAFB] group-hover:bg-[#EEF2FF] rounded-xl flex items-center justify-center transition-colors">
-                    <btn.icon className="w-5 h-5 text-[#6B7280] group-hover:text-[#4F46E5]" />
-                  </div>
-                  <span className="text-[10px] font-black text-[#111827] uppercase tracking-wider">{btn.label}</span>
-                </button>
-              ))}
             </div>
-          </div>
 
-          {/* QUICK ACTION BUTTONS */}
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={() => navigate('/analytics')}
-              className="flex-1 min-w-[150px] px-6 py-4 bg-[#111827] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-black transition-all flex items-center justify-center gap-2"
-            >
-              <TrendingUp className="w-4 h-4" />
-              Performance Report
-            </button>
-            <button
-              onClick={() => window.location.href = 'mailto:admin@GlobXplore.com'}
-              className="flex-1 min-w-[150px] px-6 py-4 bg-[#4F46E5] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-[#4338CA] transition-all flex items-center justify-center gap-2"
-            >
-              <Users2 className="w-4 h-4" />
-              Contact Admin
-            </button>
+            {/* Feature 2 */}
+            <div className="flex gap-4 p-6 rounded-2xl border border-purple-100 bg-purple-50/50 hover:bg-purple-50 transition-colors">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 shrink-0">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-base font-black text-[#111827] mb-1">Lead & Student Tracking</h4>
+                <p className="text-[10px] font-black text-purple-600 mb-3 uppercase tracking-widest">Core Feature</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Step:</strong> Click "View All" in the My Students table to monitor student application stages (Lead, Counseling, Offer).
+                  </p>
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Benefit:</strong> Helps you forecast revenue and assist agents in converting their student leads faster through timely interventions.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="flex gap-4 p-6 rounded-2xl border border-orange-100 bg-orange-50/50 hover:bg-orange-50 transition-colors">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 shrink-0">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-base font-black text-[#111827] mb-1">Smart Follow-ups & Alerts</h4>
+                <p className="text-[10px] font-black text-orange-600 mb-3 uppercase tracking-widest">Core Feature</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Step:</strong> Check the Priority Alerts and Follow-ups panels daily. Mark completed tasks as "Done" or "Reschedule" them.
+                  </p>
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Benefit:</strong> Never miss an important call or meeting, significantly increasing agent retention and lead conversion rates.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="flex gap-4 p-6 rounded-2xl border border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 transition-colors">
+              <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
+                <MapPin className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-base font-black text-[#111827] mb-1">Business Map View</h4>
+                <p className="text-[10px] font-black text-emerald-600 mb-3 uppercase tracking-widest">Core Feature</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Step:</strong> Use the map to plan field visits geographically, targeting clusters of 'Revisit' or 'Active' agents in a specific area.
+                  </p>
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Benefit:</strong> Optimizes travel time and costs by allowing you to plan highly efficient field trip routes and visit more agents per day.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 5 */}
+            <div className="flex gap-4 p-6 rounded-2xl border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-50 transition-colors lg:col-span-2">
+              <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+                <BarChart3 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-base font-black text-[#111827] mb-1">Performance Analytics</h4>
+                <p className="text-[10px] font-black text-indigo-600 mb-3 uppercase tracking-widest">Core Feature</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Step:</strong> Monitor the Performance Analytics card, toggle between Monthly and Weekly views to track agents added, success rates, and overall conversions.
+                  </p>
+                  <p className="text-sm text-[#4B5563] leading-relaxed">
+                    <strong className="text-[#111827] font-black">Benefit:</strong> Provides actionable data to measure your KPI achievements, identify operational bottlenecks, and adjust your strategy to maximize revenue.
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

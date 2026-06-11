@@ -88,11 +88,10 @@ export function AddLeadModal({ isOpen, onClose, onSuccess }: AddLeadModalProps) 
             </div>
             <div>
               <label className="block text-sm font-medium text-[#111827] mb-2">
-                Email *
+                Email
               </label>
               <input
                 type="email"
-                required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"

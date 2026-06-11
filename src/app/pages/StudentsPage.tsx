@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Plus, Filter, Download, Search, Loader2, Trash2 } from "lucide-react";
 import { AddStudentModal } from "../components/modals/AddStudentModal";
 import { AgentAddLeadModal } from "../components/modals/AgentAddLeadModal";
-import { studentApi, adminApi, userApi } from "../../lib/api";
+import { studentApi, adminApi, userApi, agentApi } from "../../lib/api";
 
 export function StudentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,18 +57,27 @@ export function StudentsPage() {
         id: apiStudent._id || apiStudent.id || index + 2000,
         name: apiStudent.name || "Unknown",
         phone: apiStudent.phone || "-",
-        country: apiStudent.country || "-",
-        program: apiStudent.program || "-",
+        country: apiStudent.country || apiStudent.preferredCountry || apiStudent.interestedCountry || "-",
+        program: apiStudent.program || apiStudent.interestedProgram || "-",
         course: apiStudent.course || "-",
-        university: apiStudent.university || "-",
+        university: apiStudent.university || apiStudent.interestedUniversity || "-",
         agent: apiStudent.agent || "-",
-        status: apiStudent.stage || apiStudent.status || "Lead",
+        status: apiStudent.pipelineStage || apiStudent.stage || apiStudent.status || "Lead",
         statusColor: "bg-emerald-100 text-emerald-700",
         enrollmentDate: apiStudent.enrollmentDate ? new Date(apiStudent.enrollmentDate).toISOString().split('T')[0] : "-"
       }));
       setStudents(mappedStudents);
       if (!isAdmin) {
-        setStats(prev => ({ ...prev, total: mappedStudents.length }));
+        if (res.data?.stats) {
+          setStats({
+            total: res.data.total || mappedStudents.length,
+            enrolledThisMonth: res.data.stats.enrolledThisMonth || res.data.stats.totalStudentsEnrolledThisMonth || 0,
+            visaApproved: res.data.stats.visaApproved || 0,
+            activeApps: res.data.stats.activeApplications || 0
+          });
+        } else {
+          setStats(prev => ({ ...prev, total: mappedStudents.length }));
+        }
       }
     } catch (err) {
       console.error("Failed to load students from API", err);

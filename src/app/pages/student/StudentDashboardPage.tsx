@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import { studentPortalApi } from "../../../lib/api";
 
 export function StudentDashboardPage() {
@@ -38,11 +39,13 @@ export function StudentDashboardPage() {
 
         const dashData = dashRes?.data || dashRes || null;
         if (dashData) {
-          if (pipeRes?.success && pipeRes.data) {
+          if (pipeRes?.success && pipeRes.data && !dashData.timeline) {
             dashData.timeline = pipeRes.data.timeline;
+          }
+          if (pipeRes?.success && pipeRes.data && !dashData.currentStage) {
             dashData.currentStage = pipeRes.data.currentStage;
           }
-          if (docRes?.success && docRes.data) {
+          if (docRes?.success && docRes.data && dashData.missingDocsCount === undefined) {
             dashData.missingDocsCount = (docRes.data.missing || []).length;
           }
         }
@@ -106,8 +109,8 @@ export function StudentDashboardPage() {
     },
     {
       title: "Subscription Status",
-      value: dashboardData?.subscription?.plan || "Standard",
-      subtitle: dashboardData?.subscription?.expiry ? `Active until ${dashboardData.subscription.expiry}` : "No active subscription",
+      value: dashboardData?.subscription?.plan && dashboardData.subscription.plan !== "none" ? dashboardData.subscription.plan.charAt(0).toUpperCase() + dashboardData.subscription.plan.slice(1) : "Free Plan",
+      subtitle: dashboardData?.subscription?.active ? `Active until ${dashboardData.subscription.expiry}` : dashboardData?.subscription?.expiry === "Expired" ? "Subscription Expired" : "No active subscription",
       icon: ShieldCheck,
       color: "text-indigo-600",
       bg: "bg-indigo-50",
@@ -181,10 +184,14 @@ export function StudentDashboardPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="p-8 bg-indigo-600 rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl shadow-indigo-200">
             <div className="relative z-10">
-              <h2 className="text-2xl font-black mb-2">Ready for your Interview?</h2>
-              <p className="text-indigo-100 font-medium mb-6 max-w-md">Our AI mock interview tool is ready to help you prepare for your university screening.</p>
-              <button className="px-6 py-3 bg-white text-indigo-600 rounded-2xl font-black text-sm hover:bg-indigo-50 transition-colors">
-                Start Mock Interview
+              <h2 className="text-2xl font-black mb-2">Student Portal Guide</h2>
+              <p className="text-indigo-100 font-medium mb-6 max-w-md">Discover all the features of your CRM dashboard. Track applications, manage documents, attend webinars, and communicate with your counsellor seamlessly.</p>
+              <button 
+                onClick={() => navigate("/student/manual")}
+                className="px-6 py-3 bg-white text-indigo-600 rounded-2xl font-black text-sm hover:bg-indigo-50 transition-colors flex items-center gap-2"
+              >
+                <ClipboardList className="w-4 h-4" />
+                Read Manual
               </button>
             </div>
             {/* Abstract Background Shapes */}

@@ -93,7 +93,7 @@ export function LeadDetailsPage() {
                   </div>
                   <div>
                     <p className="text-xs text-[#6B7280]">Country</p>
-                    <p className="text-sm font-medium">{lead.country || "N/A"}</p>
+                    <p className="text-sm font-medium">{lead.interestCountry || "N/A"}</p>
                   </div>
                 </div>
               </div>
@@ -104,7 +104,7 @@ export function LeadDetailsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-[#6B7280] mb-0.5"><BookOpen className="w-3 h-3 inline mr-1" />Interest</p>
-                    <p className="text-sm font-medium text-[#111827]">{lead.interest || "N/A"}</p>
+                    <p className="text-sm font-medium text-[#111827]">{lead.interestedLevel || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-[#6B7280] mb-0.5"><Target className="w-3 h-3 inline mr-1" />Course</p>

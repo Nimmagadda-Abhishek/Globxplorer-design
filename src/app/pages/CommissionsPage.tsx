@@ -126,17 +126,17 @@ export function CommissionsPage() {
                     <span className="text-xs font-bold text-[#4B5563]">{comm.id || `COM-00${i+1}`}</span>
                   </td>
                   <td className="px-6 py-5">
-                    <div className="font-bold text-[#111827]">{comm.student || comm.studentName}</div>
-                    <div className="text-xs text-[#6B7280]">{comm.gxId || `GXST-${1000+i}`}</div>
+                    <div className="font-bold text-[#111827]">{comm.student || comm.studentName || comm.studentId?.name || "Unknown"}</div>
+                    <div className="text-xs text-[#6B7280]">{comm.gxId || comm.studentId?.gxId || `GXST-${1000+i}`}</div>
                   </td>
                   <td className="px-6 py-5">
-                    <div className="font-bold text-[#374151]">{comm.university}</div>
+                    <div className="font-bold text-[#374151]">{comm.university || "University"}</div>
                     <div className="text-xs text-[#6B7280] flex items-center gap-1 mt-0.5">
-                       <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div> {comm.country}
+                       <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div> {comm.country || "Other"}
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <span className="font-black text-[#111827]">₹{comm.amount.toLocaleString()}</span>
+                    <span className="font-black text-[#111827]">₹{(comm.amount || comm.amountEarned || 0).toLocaleString()}</span>
                   </td>
                   <td className="px-6 py-5">
                     <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${
@@ -148,7 +148,7 @@ export function CommissionsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-5">
-                    <span className="text-sm font-medium text-[#4B5563]">{comm.date}</span>
+                    <span className="text-sm font-medium text-[#4B5563]">{comm.date || (comm.createdAt ? new Date(comm.createdAt).toLocaleDateString() : "-")}</span>
                   </td>
                   <td className="px-6 py-5 text-right">
                     <button className="p-2 text-[#9CA3AF] hover:text-[#4F46E5] hover:bg-[#EEF2FF] rounded-lg transition-colors">

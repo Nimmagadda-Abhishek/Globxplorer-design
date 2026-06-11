@@ -16,7 +16,15 @@ export function SettingsPage() {
     { id: "security", label: "Security", icon: Lock },
   ];
 
-  const role = localStorage.getItem("userRole");
+  // NOTE: Settings should never crash if localStorage is empty/unavailable.
+  const role = (() => {
+    try {
+      return localStorage.getItem("userRole");
+    } catch {
+      return null;
+    }
+  })();
+
   if (role === "AGENT") {
     tabs.splice(1, 0, { id: "business", label: "Business Profile", icon: Briefcase });
   }
@@ -200,7 +208,14 @@ function ProfileSettings({ profile }: { profile: any }) {
 }
 
 function NotificationSettings() {
-  const [prefs, setPrefs] = useState<any>(null);
+  const [prefs, setPrefs] = useState<any>({
+    allowApp: false,
+    allowEmail: false,
+    allowWhatsApp: false,
+    allowMarketing: false,
+    quietHoursStart: "22:00",
+    quietHoursEnd: "07:00",
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -28,6 +28,7 @@ export function StudentChatPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [studentId, setStudentId] = useState<string>("");
   
   // Alumni chat state
   const [threads, setThreads] = useState<any[]>([]);
@@ -46,6 +47,27 @@ export function StudentChatPage() {
       return payload.id || payload._id || '';
     } catch { return ''; }
   })();
+
+  // Fetch support messages via profile API
+  useEffect(() => {
+    if (activeView !== 'support') return;
+    const fetchSupport = async () => {
+      try {
+        const res = await studentPortalApi.profile.get().catch(() => null);
+        if (res?.data) {
+          setStudentId(res.data._id || res.data.id);
+          setMessages(res.data.messages || []);
+        }
+      } catch (err) {
+        console.error("Failed to load support chat", err);
+      }
+    };
+    fetchSupport();
+    
+    // Simple polling for new messages could go here if needed
+    const interval = setInterval(fetchSupport, 10000);
+    return () => clearInterval(interval);
+  }, [activeView]);
 
   // Fetch alumni chat threads
   useEffect(() => {
@@ -108,24 +130,30 @@ export function StudentChatPage() {
   }, [displayMessages, messages, isTyping]);
 
   const handleSendSupport = async () => {
+    const targetId = studentId || currentUserId;
     if (!newMessage.trim() || sending) return;
+    if (!targetId) {
+      alert("Error: Student ID not found.");
+      return;
+    }
     const msgText = newMessage.trim();
     setNewMessage("");
     setSending(true);
     
-    // Support chat is currently mocked for UX demonstration
-    const userMsg = { content: msgText, timestamp: new Date(), sender: 'me' };
-    setMessages(prev => [...prev, userMsg]);
-    
-    // Simulate support response
-    setTimeout(() => {
+    try {
+      await studentPortalApi.chat.sendMessage(targetId, msgText);
       setMessages(prev => [...prev, { 
-        content: "Thank you for reaching out to GlobXplore Support. A counsellor will be available to assist you shortly. In the meantime, please feel free to browse our FAQ or update your profile documents.", 
-        timestamp: new Date(), 
-        sender: 'support' 
+
+        sender: 'student', 
+        text: msgText,
+        content: msgText,
+        timestamp: new Date().toISOString() 
       }]);
+    } catch (err) {
+      console.error("Failed to send support message", err);
+    } finally {
       setSending(false);
-    }, 1500);
+    }
   };
 
   const handleSendAlumni = async (e: React.FormEvent) => {
@@ -245,19 +273,22 @@ export function StudentChatPage() {
                   <p className="font-bold text-sm">Start the conversation</p>
                 </div>
               )}
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex items-start gap-4 ${msg.sender === 'me' ? 'flex-row-reverse max-w-[80%] ml-auto' : 'max-w-[80%]'}`}>
-                  <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-white text-xs font-black ${msg.sender === 'me' ? 'bg-slate-900' : 'bg-indigo-600'}`}>
-                    {msg.sender === 'me' ? 'ME' : 'ST'}
-                  </div>
-                  <div className={msg.sender === 'me' ? 'text-right' : 'text-left'}>
-                    <div className={`p-4 rounded-2xl shadow-lg ${msg.sender === 'me' ? 'bg-indigo-600 rounded-tr-none shadow-indigo-100' : 'bg-white border border-slate-100 rounded-tl-none shadow-slate-100'}`}>
-                      <p className={`text-sm font-medium ${msg.sender === 'me' ? 'text-white' : 'text-slate-700'}`}>{msg.content}</p>
+              {messages.map((msg, i) => {
+                const isMine = msg.sender === 'me' || msg.sender === 'student';
+                return (
+                  <div key={i} className={`flex items-start gap-4 ${isMine ? 'flex-row-reverse max-w-[80%] ml-auto' : 'max-w-[80%]'}`}>
+                    <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-white text-xs font-black ${isMine ? 'bg-slate-900' : 'bg-indigo-600'}`}>
+                      {isMine ? 'ME' : 'ST'}
                     </div>
-                    <p className="text-[10px] font-bold text-slate-400 mt-1">{formatTime(msg.timestamp)}</p>
+                    <div className={isMine ? 'text-right' : 'text-left'}>
+                      <div className={`p-4 rounded-2xl shadow-lg ${isMine ? 'bg-indigo-600 rounded-tr-none shadow-indigo-100' : 'bg-white border border-slate-100 rounded-tl-none shadow-slate-100'}`}>
+                        <p className={`text-sm font-medium ${isMine ? 'text-white' : 'text-slate-700'}`}>{msg.text || msg.content}</p>
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 mt-1">{formatTime(msg.timestamp)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 

@@ -34,8 +34,10 @@ export function AddAgentModal({ isOpen, onClose, onSuccess }: AddAgentModalProps
     bankName: "",
     accountNo: "",
     assignedManagerId: "",
+    status: "Interested",
   });
   const [businessBoardPhoto, setBusinessBoardPhoto] = useState<File | null>(null);
+  const [verificationPhoto, setVerificationPhoto] = useState<File | null>(null);
 
   useEffect(() => {
     if (isOpen && !successData && !isAM) {
@@ -52,7 +54,9 @@ export function AddAgentModal({ isOpen, onClose, onSuccess }: AddAgentModalProps
     if (name.length < 3) return;
     try {
       const res: any = await amApi.agents.search(name);
-      if (res.exists) {
+      if (res.exists && res.data && res.data.length > 0) {
+        setDuplicateWarning(res.data[0]);
+      } else if (res.exists) {
         setDuplicateWarning(res);
       } else {
         setDuplicateWarning(null);
@@ -69,17 +73,19 @@ export function AddAgentModal({ isOpen, onClose, onSuccess }: AddAgentModalProps
     setFormData({
       businessName: "", businessOwnerName: "", email: "", whatsapp: "", secondaryNumber: "",
       locationUrl: "", businessArea: "", street: "", lineNumber: "", natureOfBusiness: "",
-      mouStatus: "pending", bankName: "", accountNo: "", assignedManagerId: ""
+      mouStatus: "pending", bankName: "", accountNo: "", assignedManagerId: "", status: "Interested"
     });
     setBusinessBoardPhoto(null);
+    setVerificationPhoto(null);
     setError("");
     setDuplicateWarning(null);
     onClose();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'business' | 'verification') => {
     if (e.target.files && e.target.files[0]) {
-      setBusinessBoardPhoto(e.target.files[0]);
+      if (type === 'business') setBusinessBoardPhoto(e.target.files[0]);
+      if (type === 'verification') setVerificationPhoto(e.target.files[0]);
     }
   };
 
@@ -89,21 +95,31 @@ export function AddAgentModal({ isOpen, onClose, onSuccess }: AddAgentModalProps
     setError("");
 
     try {
-      const payload = isAM ? {
-        ...formData,
-        accountDetails: {
-          bankName: formData.bankName,
-          accountNo: formData.accountNo
-        }
-      } : new FormData();
-
-      if (!isAM) {
-        // Legacy FormData support for Admin
+      let payload: any;
+      if (isAM && formData.status !== 'Revisit' && !businessBoardPhoto) {
+        payload = {
+          ...formData,
+          accountDetails: {
+            bankName: formData.bankName,
+            accountNo: formData.accountNo
+          }
+        };
+      } else {
+        payload = new FormData();
         Object.entries(formData).forEach(([key, value]) => {
-          if (value) (payload as FormData).append(key, value as string);
+          if (value) payload.append(key, value as string);
         });
+        if (isAM) {
+          payload.append("accountDetails", JSON.stringify({
+            bankName: formData.bankName,
+            accountNo: formData.accountNo
+          }));
+        }
         if (businessBoardPhoto) {
-          (payload as FormData).append("businessBoardPhoto", businessBoardPhoto);
+          payload.append("businessBoardPhoto", businessBoardPhoto);
+        }
+        if (verificationPhoto) {
+          payload.append("verificationPhoto", verificationPhoto);
         }
       }
 
@@ -111,11 +127,16 @@ export function AddAgentModal({ isOpen, onClose, onSuccess }: AddAgentModalProps
       const data = res.data || res;
       const user = data.agent || data.user || data;
       
-      setSuccessData({
-        gxId: user.gxId || "N/A",
-        autoPassword: data.password || user.password || data.autoPassword || user.autoPassword || res.autoPassword || "Check email/whatsapp",
-        message: res.message || "Agent created successfully"
-      });
+      if (formData.status === 'Interested' || !isAM) {
+        setSuccessData({
+          gxId: user.gxId || "N/A",
+          autoPassword: data.password || user.password || data.autoPassword || user.autoPassword || res.autoPassword || "Check email/whatsapp",
+          message: res.message || "Agent created successfully"
+        });
+      } else {
+        alert(`Agent saved with status: ${formData.status}`);
+        handleClose();
+      }
       
       if (onSuccess) onSuccess();
     } catch (err: any) {
@@ -197,7 +218,7 @@ export function AddAgentModal({ isOpen, onClose, onSuccess }: AddAgentModalProps
               <div>
                 <p className="text-sm font-black text-orange-900 uppercase tracking-wide">Already Visited Before!</p>
                 <p className="text-xs text-orange-700 font-bold mt-1">
-                  {duplicateWarning.businessName} (ID: {duplicateWarning.gxId}) already exists at {duplicateWarning.location}.
+                  {typeof duplicateWarning.businessName === 'string' ? duplicateWarning.businessName : 'Agent'} (ID: {typeof duplicateWarning.gxId === 'string' ? duplicateWarning.gxId : 'Unknown'}) already exists at {typeof duplicateWarning.location === 'object' ? JSON.stringify(duplicateWarning.location) : duplicateWarning.location || 'this location'}.
                 </p>
                 <button className="mt-3 text-[10px] font-black text-orange-900 underline uppercase tracking-widest">View History</button>
               </div>
@@ -238,6 +259,16 @@ export function AddAgentModal({ isOpen, onClose, onSuccess }: AddAgentModalProps
                   <label className="block text-xs font-black text-[#374151] uppercase tracking-wider mb-2">WhatsApp Number *</label>
                   <input type="tel" required value={formData.whatsapp} onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })} className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all"/>
                 </div>
+                {isAM && (
+                  <div>
+                    <label className="block text-xs font-black text-[#374151] uppercase tracking-wider mb-2">Interest Status *</label>
+                    <select required value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full px-4 py-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all">
+                      <option value="Interested">Interested (Provision user)</option>
+                      <option value="Not Interested">Not Interested (Save lead)</option>
+                      <option value="Revisit">Re-visit (Upload photo)</option>
+                    </select>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -278,25 +309,46 @@ export function AddAgentModal({ isOpen, onClose, onSuccess }: AddAgentModalProps
                 </div>
               </div>
 
-              {!isAM && (
-                <div className="mt-8">
-                  <label className="block text-xs font-black text-[#374151] uppercase tracking-wider mb-4">Verification Photo (Business Board) *</label>
-                  <div className="border-2 border-dashed border-[#E5E7EB] rounded-2xl p-8 text-center hover:bg-indigo-50/30 hover:border-[#4F46E5] transition-all relative group">
-                    <input type="file" required={!isAM} accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              <div className="mt-8">
+                <h4 className="text-xs font-black text-[#374151] uppercase tracking-wider mb-4">
+                  Photo Uploads
+                </h4>
+                <div className={`grid grid-cols-1 ${(!isAM || formData.status === 'Revisit') ? 'md:grid-cols-2' : ''} gap-4`}>
+                  {/* Business Board Photo (Always Visible, Not Required) */}
+                  <div className="border-2 border-dashed border-[#E5E7EB] rounded-2xl p-6 text-center hover:bg-indigo-50/30 hover:border-[#4F46E5] transition-all relative group bg-white">
+                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'business')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     <div className="flex flex-col items-center">
-                      <Upload className="w-10 h-10 text-[#9CA3AF] group-hover:text-[#4F46E5] mb-3 transition-colors" />
+                      <Upload className="w-8 h-8 text-[#9CA3AF] group-hover:text-[#4F46E5] mb-2 transition-colors" />
                       {businessBoardPhoto ? (
-                        <span className="text-sm font-black text-emerald-600 block truncate max-w-xs">{businessBoardPhoto.name}</span>
+                        <span className="text-sm font-black text-emerald-600 block truncate max-w-[150px]">{businessBoardPhoto.name}</span>
                       ) : (
                         <>
-                          <span className="text-sm font-black text-[#111827]">Drop photo here or browse</span>
-                          <span className="text-[10px] text-[#6B7280] mt-2 font-bold uppercase tracking-widest">Image must contain timestamp & location</span>
+                          <span className="text-sm font-black text-[#111827]">Business Board</span>
+                          <span className="text-[9px] text-[#6B7280] mt-1 font-bold uppercase tracking-widest">Board or Shop Front</span>
                         </>
                       )}
                     </div>
                   </div>
+
+                  {/* Verification Photo (Only for Revisit, Required) */}
+                  {(!isAM || formData.status === 'Revisit') && (
+                    <div className="border-2 border-dashed border-[#E5E7EB] rounded-2xl p-6 text-center hover:bg-indigo-50/30 hover:border-[#4F46E5] transition-all relative group bg-white animate-in fade-in zoom-in duration-300">
+                      <input type="file" required={formData.status === 'Revisit'} accept="image/*" onChange={(e) => handleFileChange(e, 'verification')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <div className="flex flex-col items-center">
+                        <Upload className="w-8 h-8 text-[#9CA3AF] group-hover:text-[#4F46E5] mb-2 transition-colors" />
+                        {verificationPhoto ? (
+                          <span className="text-sm font-black text-emerald-600 block truncate max-w-[150px]">{verificationPhoto.name}</span>
+                        ) : (
+                          <>
+                            <span className="text-sm font-black text-[#111827]">Location Verification <span className="text-red-500">*</span></span>
+                            <span className="text-[9px] text-[#6B7280] mt-1 font-bold uppercase tracking-widest">Must include timestamp</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </section>
 
             {/* Step 3: Commercials */}

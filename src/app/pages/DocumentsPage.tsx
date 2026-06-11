@@ -4,6 +4,7 @@ import { DocumentPreviewModal } from "../components/modals/DocumentPreviewModal"
 import { documentApi, adminApi } from "../../lib/api";
 
 export function DocumentsPage() {
+  const role = localStorage.getItem("userRole") || "ADMIN";
   const [activeTab, setActiveTab] = useState<"student" | "company">("student");
 
   // Student docs state
@@ -150,15 +151,17 @@ export function DocumentsPage() {
             <User className="w-4 h-4" />
             Student Docs
           </button>
-          <button
-            onClick={() => setActiveTab("company")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === "company" ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
-            }`}
-          >
-            <Building2 className="w-4 h-4" />
-            Company Docs
-          </button>
+          {role === "ADMIN" && (
+            <button
+              onClick={() => setActiveTab("company")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "company" ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
+              }`}
+            >
+              <Building2 className="w-4 h-4" />
+              Company Docs
+            </button>
+          )}
         </div>
       </div>
 

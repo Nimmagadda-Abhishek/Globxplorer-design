@@ -22,7 +22,7 @@ import {
   Gift,
   BellRing,
   PieChart,
-  Trophy,
+
   Globe,
   Lock,
   ChevronDown,
@@ -41,7 +41,6 @@ const adminNavGroups = [
     items: [
       { path: "/", label: "Dashboard", icon: LayoutDashboard },
       { path: "/analytics", label: "Charts Section", icon: BarChart3 },
-      { path: "/reports", label: "Weekly Reports", icon: PieChart },
     ]
   },
   {
@@ -77,7 +76,6 @@ const adminNavGroups = [
     items: [
       { path: "/alerts", label: "Alerts & Reminders", icon: BellRing },
       { path: "/whatsapp-logs", label: "WhatsApp Logs", icon: MessageSquare },
-      { path: "/gamification", label: "Gamification", icon: Trophy },
       { path: "/settings", label: "Settings Panel", icon: Settings },
     ]
   }

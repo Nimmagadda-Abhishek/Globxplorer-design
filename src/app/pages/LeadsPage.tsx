@@ -5,12 +5,14 @@ import { AddLeadModal } from "../components/modals/AddLeadModal";
 import { AgentAddLeadModal } from "../components/modals/AgentAddLeadModal";
 import { PromoteLeadModal } from "../components/modals/PromoteLeadModal";
 import { BulkUploadLeadsModal } from "../components/modals/BulkUploadLeadsModal";
+import { EditLeadModal } from "../components/modals/EditLeadModal";
 import { leadApi, adminApi, userApi } from "../../lib/api";
 
 export function LeadsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [editingLead, setEditingLead] = useState<any>(null);
   const [promotingLeadId, setPromotingLeadId] = useState<string | null>(null);
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +22,7 @@ export function LeadsPage() {
   const role = localStorage.getItem("userRole");
   const isAdmin = role === "ADMIN";
   const canPromote = isAdmin || role === "TELECALLER";
+  const canEdit = isAdmin || role === "TELECALLER";
 
   useEffect(() => {
     fetchLeads();
@@ -29,7 +32,7 @@ export function LeadsPage() {
     setLoading(true);
     try {
       let res: any;
-      
+
       if (isAssignedView) {
         res = await leadApi.getMyLeads();
       } else {
@@ -41,21 +44,30 @@ export function LeadsPage() {
           res = await leadApi.getMyLeads();
         }
       }
-      
+
       const rawLeads = res.data?.leads || res.leads || res.data || [];
       const mappedLeads = rawLeads.map((apiLead: any, index: number) => ({
         id: apiLead._id || apiLead.id || index + 1000,
+        gxId: apiLead.gxId || "-",
         name: apiLead.name || "Unknown",
+        leadType: apiLead.leadType || "-",
+        email: apiLead.email || undefined,
         phone: apiLead.phone || "-",
-        country: apiLead.country || "-",
-        interest: apiLead.interest || "-",
+        // Match your lead-management payload fields
+        country: apiLead.interestCountry || apiLead.country || "-",
+        interest: apiLead.interestedLevel || apiLead.interest || "-",
         course: apiLead.course || "-",
         source: apiLead.source || "-",
-        assignedTo: apiLead.assignedTo?.name || apiLead.assignedAgent?.name || apiLead.agent || "-",
-        sourceAgent: apiLead.sourceAgent?.name || "-",
         status: apiLead.status || "New",
+        assignedTo: apiLead.assignedTo?.name || apiLead.assignedAgent?.name || apiLead.agent || "-",
+        // Used by the UI column “Source Agent”
+        sourceAgent: apiLead.sourceAgent?.name || apiLead.sourceAgent || "-",
         statusColor: "bg-blue-100 text-blue-700",
-        followUpDate: apiLead.followUpDate ? new Date(apiLead.followUpDate).toISOString().split('T')[0] : "-"
+        followUpDate: apiLead.followUpDate ? new Date(apiLead.followUpDate).toISOString().split('T')[0] : "-",
+        // For editing, keep original fields
+        notes: apiLead.notes || "",
+        course: apiLead.course || "",
+        intake: apiLead.intake || "",
       }));
       setLeads(mappedLeads);
     } catch (err) {
@@ -225,6 +237,14 @@ export function LeadsPage() {
                     <span className="text-sm text-[#6B7280]">{lead.followUpDate}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-3">
+                    {canEdit && (
+                      <button
+                        onClick={() => setEditingLead(lead)}
+                        className="text-indigo-600 hover:text-indigo-700 font-semibold"
+                      >
+                        Edit
+                      </button>
+                    )}
                     {isAdmin && (
                       <button
                         onClick={() => handleDelete(lead.id)}
@@ -371,6 +391,14 @@ export function LeadsPage() {
                     >
                       View
                     </Link>
+                    {canEdit && (
+                      <button
+                        onClick={() => setEditingLead(lead)}
+                        className="text-left text-indigo-600 hover:text-indigo-700 font-semibold"
+                      >
+                        Edit
+                      </button>
+                    )}
                     {isAdmin && (
                       <button
                         onClick={() => handleDelete(lead.id)}
@@ -445,6 +473,15 @@ export function LeadsPage() {
           onSuccess={fetchLeads}
         />
       )}
+      <EditLeadModal 
+        isOpen={!!editingLead}
+        lead={editingLead}
+        onClose={() => setEditingLead(null)}
+        onSuccess={() => {
+          setEditingLead(null);
+          fetchLeads();
+        }}
+      />
     </div>
   );
 }

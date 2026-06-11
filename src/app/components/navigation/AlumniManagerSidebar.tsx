@@ -31,10 +31,8 @@ export function AlumniManagerSidebar() {
     { icon: Users, label: "Users", path: "/alumni-manager/users" },
     { icon: GraduationCap, label: "Students", path: "/alumni-manager/students" },
     { icon: Briefcase, label: "Service Requests", path: "/alumni-manager/service-requests" },
-    { icon: Tag, label: "Pricing Control", path: "/alumni-manager/pricing" },
     { icon: CreditCard, label: "Payments", path: "/alumni-manager/payments" },
     { icon: MessageSquare, label: "Community Chat", path: "/alumni-manager/community" },
-    { icon: BarChart3, label: "Reports", path: "/alumni-manager/reports" },
   ];
 
   const bottomItems = [

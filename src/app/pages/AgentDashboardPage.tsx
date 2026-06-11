@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import {
   Users, UserPlus, FileText, CheckCircle2, DollarSign, Calendar, Target,
   GraduationCap, ExternalLink, QrCode, Search, Gift, BellRing, Briefcase,
   Settings, MessageSquare, ChevronRight, Edit, Star, ShieldCheck, Download,
-  TrendingUp, Globe, HelpCircle, FileCheck,
+  TrendingUp, Globe, HelpCircle, FileCheck, Award,
   Link
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
@@ -16,6 +17,7 @@ export function AgentDashboardPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showTierDetails, setShowTierDetails] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(null);
   const [leads, setLeads] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -69,7 +71,7 @@ export function AgentDashboardPage() {
     { title: "Total Students Referred", value: summaryData?.totalStudents || "0", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
     { title: "Active Applications", value: summaryData?.activeApplications || "0", icon: FileText, color: "text-purple-600", bg: "bg-purple-50" },
     { title: "Total Commission Earned", value: `₹${summaryData?.totalCommission || "0"}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { title: "This Month Earnings", value: `₹${summaryData?.thisMonth || "0"}`, icon: TrendingUp, color: "text-cyan-600", bg: "bg-cyan-50" },
+    { title: "This Month Earnings", value: `₹${summaryData?.thisMonthEarnings || "0"}`, icon: TrendingUp, color: "text-cyan-600", bg: "bg-cyan-50" },
     { title: "Follow-ups Due", value: summaryData?.pendingFollowUps || "0", icon: Calendar, color: "text-orange-600", bg: "bg-orange-50" },
     { title: "Conversion Rate", value: `${summaryData?.conversionRate || "0"}%`, icon: Target, color: "text-pink-600", bg: "bg-pink-50" },
   ];
@@ -236,6 +238,42 @@ export function AgentDashboardPage() {
         {/* Right Column (Sidebar Widgets) */}
         <div className="space-y-6">
 
+          {/* Section: Tier Status */}
+          {summaryData?.tierDetails && (
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-6 overflow-hidden relative">
+              <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-[100px] -z-0 ${summaryData.tierDetails.badge === 'Gold' || summaryData.tierDetails.badge === 'Platinum' ? 'bg-amber-100' : summaryData.tierDetails.badge === 'Silver' ? 'bg-slate-200' : 'bg-orange-50'}`}></div>
+              <h2 className="text-lg font-black text-[#111827] mb-1 relative z-10 flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-500" /> Current Tier: {summaryData.tierDetails.badge}
+              </h2>
+              <p className="text-sm text-[#4B5563] font-bold mb-1 relative z-10">{summaryData.tierDetails.name}</p>
+              <p className="text-xs text-[#6B7280] mb-4 relative z-10 line-clamp-2">{summaryData.tierDetails.bonus || summaryData.tierDetails.description}</p>
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-[#4B5563]">Progress to Next Tier</span>
+                  <button onClick={() => setShowTierDetails(true)} className="text-[10px] font-black text-[#4F46E5] uppercase tracking-widest hover:underline cursor-pointer">
+                    Know More
+                  </button>
+                </div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-black text-[#111827]">{summaryData.tierDetails.currentCount} / {summaryData.tierDetails.nextTierAt || 'MAX'}</span>
+                </div>
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500 rounded-full transition-all duration-1000" style={{ width: `${summaryData.tierDetails.nextTierAt ? Math.min(100, (summaryData.tierDetails.currentCount / summaryData.tierDetails.nextTierAt) * 100) : 100}%` }} />
+                </div>
+                {summaryData.tierDetails.nextTierAt && (summaryData.tierDetails.nextTierAt - summaryData.tierDetails.currentCount > 0) ? (
+                  <p className="text-[10px] text-center text-[#6B7280] mt-2 font-medium">
+                    {summaryData.tierDetails.nextTierAt - summaryData.tierDetails.currentCount} more students to unlock next tier!
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-center text-amber-600 mt-2 font-bold uppercase tracking-widest">
+                    Maximum Tier Reached!
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Section 3: Quick Add Lead Panel */}
           <div className="bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -261,7 +299,7 @@ export function AgentDashboardPage() {
               }
             }}>
               <input name="name" type="text" placeholder="Full Name *" required className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-              <input name="email" type="email" placeholder="Email Address *" required className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
+              <input name="email" type="email" placeholder="Email Address (Optional)" className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
               <input name="phone" type="text" placeholder="Contact Number *" required className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-sm placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
               <button type="submit" className="w-full py-2.5 bg-white text-[#4F46E5] font-black rounded-xl text-sm hover:bg-gray-50 transition-colors shadow-md mt-2">
                 Submit Details
@@ -269,46 +307,97 @@ export function AgentDashboardPage() {
             </form>
           </div>
 
-          {/* Section 14: Follow-up Reminders */}
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-5">
-            <h2 className="text-base font-bold text-[#111827] mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#F59E0B]" /> Actions Required
+          {/* Agent Platform Manual */}
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-6 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-[100px] -z-0"></div>
+            <h2 className="text-lg font-black text-[#111827] mb-2 relative z-10 flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-[#4F46E5]" /> Agent Operations Manual
             </h2>
-            <div className="space-y-3">
-              {reminders.length > 0 ? reminders.map((rem, i) => (
-                <div key={i} className="flex gap-3 p-3 rounded-xl hover:bg-[#F9FAFB] border border-transparent hover:border-[#E5E7EB] transition-colors cursor-pointer">
-                  <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${rem.type === 'document' ? 'bg-red-500' : rem.type === 'payment' ? 'bg-green-500' : 'bg-orange-500'}`} />
-                  <div>
-                    <h4 className="text-sm font-bold text-[#111827]">{rem.title || rem.message}</h4>
-                    <p className="text-xs text-[#6B7280]">{rem.description || rem.desc || rem.date}</p>
+            <p className="text-xs text-[#6B7280] mb-6 relative z-10">Your guide to all platform features & options.</p>
+            
+            <div className="space-y-4 relative z-10">
+              <div className="group cursor-default">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <UserPlus className="w-3.5 h-3.5" />
                   </div>
+                  <h4 className="text-sm font-bold text-[#111827] group-hover:text-blue-600 transition-colors">Quick Add Lead</h4>
                 </div>
-              )) : (
-                <div className="py-6 text-center text-sm font-bold text-gray-500">
-                  No reminders available.
+                <p className="text-xs text-[#6B7280] pl-9 leading-relaxed">
+                  Use the quick form above to register new prospective students. Provide their Name, Email, and Phone. They instantly appear in your <strong>My Added Leads</strong> list.
+                </p>
+              </div>
+
+              <div className="group cursor-default">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <Users className="w-3.5 h-3.5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#111827] group-hover:text-purple-600 transition-colors">My Added Leads & Students</h4>
                 </div>
-              )}
+                <p className="text-xs text-[#6B7280] pl-9 leading-relaxed">
+                  Track all your referrals. Monitor real-time status updates as leads progress from initial contact to successful university enrollment. Click "Details" to view full profiles.
+                </p>
+              </div>
+
+              <div className="group cursor-default">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <DollarSign className="w-3.5 h-3.5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#111827] group-hover:text-emerald-600 transition-colors">Commission Dashboard</h4>
+                </div>
+                <p className="text-xs text-[#6B7280] pl-9 leading-relaxed">
+                  Transparent tracking of your earnings. View total earned, pending payouts, and successfully paid commissions. Includes a breakdown of earnings by country.
+                </p>
+              </div>
+
+              <div className="group cursor-default">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                    <Gift className="w-3.5 h-3.5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#111827] group-hover:text-orange-600 transition-colors">Partner Offers & Benefits</h4>
+                </div>
+                <p className="text-xs text-[#6B7280] pl-9 leading-relaxed">
+                  Access exclusive promotions, university tie-up benefits, and upcoming webinars. Keep an eye out here for special incentive programs and bonuses.
+                </p>
+              </div>
+
+              <div className="group cursor-default">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
+                    <Briefcase className="w-3.5 h-3.5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#111827] group-hover:text-cyan-600 transition-colors">Profile & Settings</h4>
+                </div>
+                <p className="text-xs text-[#6B7280] pl-9 leading-relaxed">
+                  Manage your personal details. View your official <strong>GX ID</strong>, update your contact information, and upload your profile picture via the <strong>Profile</strong> tab in the sidebar.
+                </p>
+              </div>
+              
+              <div className="group cursor-default">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                    <Download className="w-3.5 h-3.5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#111827] group-hover:text-rose-600 transition-colors">KT Docs & Materials</h4>
+                </div>
+                <p className="text-xs text-[#6B7280] pl-9 leading-relaxed">
+                  Navigate to <strong>KT Docs</strong> in the sidebar to download brochures, marketing materials, and university application forms to assist your marketing efforts.
+                </p>
+              </div>
             </div>
-          </div>
-          {/* Section 8: My Business Profile (Mini) & Section 10 */}
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-5">
-            <h2 className="text-base font-bold text-[#111827] mb-4 flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-[#6B7280]" /> Profile & Tools
-            </h2>
           </div>
 
           {/* Section 12 & 13: Support & Links */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <button 
               onClick={() => window.open('https://globxplore.in/', '_blank')}
               className="p-4 bg-white border border-[#E5E7EB] rounded-2xl flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow text-[#4B5563] hover:text-[#4F46E5]"
             >
               <Globe className="w-6 h-6" />
               <span className="text-xs font-bold">Visit Website</span>
-            </button>
-            <button className="p-4 bg-white border border-[#E5E7EB] rounded-2xl flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow text-[#4B5563] hover:text-[#4F46E5]">
-              <HelpCircle className="w-6 h-6" />
-              <span className="text-xs font-bold">Get Support</span>
             </button>
           </div>
 
@@ -322,6 +411,85 @@ export function AgentDashboardPage() {
           if (leadsRes?.data) setLeads(leadsRes.data);
         }}
       />
+
+      {/* Tier Details Modal */}
+      {showTierDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowTierDetails(false)}>
+          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
+              <h2 className="text-lg font-black text-[#111827] flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-500" /> Commission Tier Details
+              </h2>
+              <button onClick={() => setShowTierDetails(false)} className="text-[#6B7280] hover:text-[#111827] p-2">
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-[#111827] uppercase tracking-widest border-b border-[#E5E7EB] pb-2">Category Wise Targets</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                    <h4 className="text-sm font-black text-orange-700">Starter (Bronze)</h4>
+                    <p className="text-xs text-orange-600 mt-1 font-medium">&lt; 5 Students</p>
+                  </div>
+                  <div className="p-3 bg-slate-100 border border-slate-200 rounded-xl">
+                    <h4 className="text-sm font-black text-slate-700">Growth (Silver)</h4>
+                    <p className="text-xs text-slate-600 mt-1 font-medium">5 to 15 Students</p>
+                  </div>
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <h4 className="text-sm font-black text-amber-700">Pro (Gold)</h4>
+                    <p className="text-xs text-amber-600 mt-1 font-medium">16 to 30 Students</p>
+                  </div>
+                  <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
+                    <h4 className="text-sm font-black text-indigo-700">Elite (Platinum)</h4>
+                    <p className="text-xs text-indigo-600 mt-1 font-medium">31 to 100 Students</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-[#111827] uppercase tracking-widest border-b border-[#E5E7EB] pb-2">Commission Bonuses</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border border-[#E5E7EB] rounded-xl">
+                    <div>
+                      <h4 className="text-sm font-black text-[#111827]">Starter - Bronze</h4>
+                      <p className="text-xs text-[#6B7280]">Basic</p>
+                    </div>
+                    <span className="text-sm font-bold text-[#4B5563]">Regular Commission</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 border border-[#E5E7EB] rounded-xl bg-[#F9FAFB]">
+                    <div>
+                      <h4 className="text-sm font-black text-[#111827]">Growth - Silver</h4>
+                      <p className="text-xs text-[#6B7280]">Advanced</p>
+                    </div>
+                    <span className="text-sm font-bold text-emerald-600">+ ₹5K per student</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 border border-[#E5E7EB] rounded-xl">
+                    <div>
+                      <h4 className="text-sm font-black text-[#111827]">Pro - Gold</h4>
+                      <p className="text-xs text-[#6B7280]">Professional</p>
+                    </div>
+                    <span className="text-sm font-bold text-emerald-600">+ ₹7K per student</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 border border-indigo-100 rounded-xl bg-indigo-50">
+                    <div>
+                      <h4 className="text-sm font-black text-[#111827]">Elite - Platinum</h4>
+                      <p className="text-xs text-[#6B7280]">Ultimate</p>
+                    </div>
+                    <span className="text-sm font-bold text-[#4F46E5]">+ ₹10K per ALL students</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-[#F9FAFB] border-t border-[#E5E7EB] flex justify-end">
+              <button onClick={() => setShowTierDetails(false)} className="px-6 py-2.5 bg-white border border-[#E5E7EB] text-[#111827] text-sm font-bold rounded-xl shadow-sm hover:bg-gray-50 transition-all">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

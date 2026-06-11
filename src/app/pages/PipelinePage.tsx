@@ -4,6 +4,7 @@ import { AddStudentModal } from "../components/modals/AddStudentModal";
 import { AgentAddLeadModal } from "../components/modals/AgentAddLeadModal";
 import { adminApi, agentApi, amApi, counsellorApi } from "../../lib/api";
 
+
 const stages = [
   { id: "lead", name: "Lead Received", color: "bg-blue-500" },
   { id: "counseling", name: "Counseling", color: "bg-indigo-500" },
@@ -21,6 +22,8 @@ export function PipelinePage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const role = localStorage.getItem("userRole") || "ADMIN";
+
+  const [dynamicStages, setDynamicStages] = useState<{id: string, name: string, color: string}[]>([]);
 
   useEffect(() => {
     fetchPipeline();
@@ -49,30 +52,37 @@ export function PipelinePage() {
       // Handle grouped data structure: [{ _id: 'StageName', students: [...] }, ...]
       const rawData = res.data || res.pipeline || [];
       let flatStudents: any[] = [];
+      const colors = ["bg-blue-500", "bg-indigo-500", "bg-purple-500", "bg-pink-500", "bg-orange-500", "bg-yellow-500", "bg-green-500", "bg-cyan-500"];
 
       if (Array.isArray(rawData) && rawData.length > 0 && rawData[0].students) {
+        setDynamicStages(rawData.map((group: any, idx: number) => ({
+          id: (group._id || "Unknown").toLowerCase(),
+          name: group._id || "Unknown",
+          color: colors[idx % colors.length]
+        })));
         flatStudents = rawData.flatMap((group: any) => 
           group.students.map((s: any) => {
             let stage = (s.pipelineStage || group._id || "").toLowerCase();
-            if (stage === "new") stage = "lead";
-            return {
-              ...s,
-              stage
-            };
+            return { ...s, stage };
           })
         );
       } else {
         const studentData = res.data?.students || res.data || res.pipeline || [];
         flatStudents = Array.isArray(studentData) ? studentData : Object.values(studentData).flat();
+        
         // Ensure stage is present for filtering
         flatStudents = flatStudents.map(s => {
-          let stage = (s.stage || s.pipelineStage || "").toLowerCase();
-          if (stage === "new") stage = "lead";
-          return {
-            ...s,
-            stage
-          };
+          let stage = (s.stage || s.pipelineStage || "lead").toLowerCase();
+          return { ...s, stage };
         });
+
+        // Extract unique stages
+        const uniqueStages = Array.from(new Set(flatStudents.map(s => s.stage)));
+        setDynamicStages(uniqueStages.map((stageId, idx) => ({
+          id: stageId,
+          name: stageId.charAt(0).toUpperCase() + stageId.slice(1),
+          color: colors[idx % colors.length]
+        })));
       }
 
       setStudents(flatStudents);
@@ -111,7 +121,7 @@ export function PipelinePage() {
             className="flex items-center gap-2 px-6 py-3 bg-[#4F46E5] rounded-xl text-sm font-bold text-white hover:bg-[#4338CA] transition-shadow shadow-lg shadow-indigo-100"
           >
             <Plus className="w-4 h-4" />
-            {localStorage.getItem("userRole") === "AGENT" || localStorage.getItem("userRole") === "AGENT_MANAGER" ? "Add Lead" : "Add Student"}
+            Add Lead
           </button>
         </div>
       </div>
@@ -142,7 +152,12 @@ export function PipelinePage() {
         )}
         {view === "kanban" ? (
           <div className="flex gap-6 h-full pb-4">
-            {stages.map((stage) => (
+            {dynamicStages.length === 0 && !loading && (
+              <div className="w-full h-full flex items-center justify-center text-[#9CA3AF] font-bold">
+                No pipeline data available.
+              </div>
+            )}
+            {dynamicStages.map((stage) => (
               <div key={stage.id} className="flex-shrink-0 w-72 flex flex-col gap-4">
                 <div className="flex items-center justify-between px-2">
                   <div className="flex items-center gap-2">
@@ -169,7 +184,7 @@ export function PipelinePage() {
                           <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
                             <User className="w-3 h-3 text-[#6B7280]" />
                           </div>
-                          <span className="text-[10px] font-bold text-[#6B7280]">{student.counsellor?.name || "Unassigned"}</span>
+                          <span className="text-[10px] font-bold text-[#6B7280]">{student.assignedCounsellor?.name || student.counsellor?.name || "Unassigned"}</span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-[#CBD5E1]" />
                       </div>
@@ -201,15 +216,15 @@ export function PipelinePage() {
                     <td className="px-6 py-5 text-sm font-black text-[#111827]">{student.name}</td>
                     <td className="px-6 py-5">
                       <span className="bg-[#F9FAFB] border border-[#E5E7EB] px-2.5 py-1 rounded-lg text-xs font-bold text-[#374151]">
-                        {student.country || student.preferredCountry}
+                        {student.country || student.preferredCountry || student.interestedCountry || "-"}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-sm font-medium text-[#6B7280]">{student.counsellor?.name || "Unassigned"}</td>
+                    <td className="px-6 py-5 text-sm font-medium text-[#6B7280]">{student.assignedCounsellor?.name || student.counsellor?.name || "Unassigned"}</td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 ${stages.find(s => s.id === student.stage)?.color || "bg-gray-300"} rounded-full`} />
+                        <div className={`w-2 h-2 ${dynamicStages.find(s => s.id === student.stage)?.color || "bg-gray-300"} rounded-full`} />
                         <span className="text-xs font-bold text-[#111827] uppercase tracking-wider">
-                          {stages.find(s => s.id === student.stage)?.name || student.stage}
+                          {dynamicStages.find(s => s.id === student.stage)?.name || student.stage}
                         </span>
                       </div>
                     </td>
@@ -221,13 +236,23 @@ export function PipelinePage() {
         )}
       </div>
       {role === "AGENT" || role === "AGENT_MANAGER" ? (
-        <AgentAddLeadModal 
-          isOpen={showAddModal} 
-          onClose={() => setShowAddModal(false)} 
+        <AgentAddLeadModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={fetchPipeline}
+        />
+      ) : role === "TELECALLER" ? (
+        <TelecallerAddLeadModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
           onSuccess={fetchPipeline}
         />
       ) : (
-        <AddStudentModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSuccess={fetchPipeline} />
+        <AddStudentModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={fetchPipeline}
+        />
       )}
     </div>
   );

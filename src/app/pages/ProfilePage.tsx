@@ -1,6 +1,6 @@
-import { User, Mail, Phone, MapPin, Calendar, Shield, Edit2, Camera, Award, Star, TrendingUp, CheckCircle2 } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Shield, Edit2, Camera, Award, Star, TrendingUp, CheckCircle2, Briefcase, FileText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { amApi } from "../../lib/api";
+import { amApi, userApi } from "../../lib/api";
 
 export function ProfilePage() {
    const userName = localStorage.getItem("userName") || "Agent Manager";
@@ -22,8 +22,8 @@ export function ProfilePage() {
    const fetchProfileData = async () => {
       try {
          const [perfRes, profRes] = await Promise.all([
-            amApi.analytics.getPerformance(),
-            amApi.profile.get()
+            role === "AGENT_MANAGER" ? amApi.analytics.getPerformance() : Promise.resolve({ data: null }),
+            userApi.getProfile()
          ]);
          setPerformance(perfRes.data);
          const profData = profRes.data || profRes;
@@ -41,7 +41,7 @@ export function ProfilePage() {
    const handleSave = async () => {
       setIsSaving(true);
       try {
-         const res = await amApi.profile.update(editForm);
+         const res = await userApi.updateProfile(editForm);
          setProfile(res.data || res);
          setIsEditing(false);
       } catch (err) {
@@ -59,7 +59,7 @@ export function ProfilePage() {
       reader.onloadend = async () => {
          const base64String = reader.result as string;
          try {
-            const res = await amApi.profile.update({ profileImage: base64String });
+            const res = await userApi.updateProfile({ profileImage: base64String });
             setProfile(res.data || res);
             setEditForm(prev => ({ ...prev, profileImage: base64String }));
          } catch (err) {
@@ -201,7 +201,7 @@ export function ProfilePage() {
                                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                               />
                            ) : (
-                              <p className="text-sm font-bold text-[#111827]">{profile?.address || "Bangalore, India"}</p>
+                              <p className="text-sm font-bold text-[#111827]">{role === 'AGENT' && profile?.agentDetails?.businessAreaName ? profile.agentDetails.businessAreaName : (profile?.address || "Bangalore, India")}</p>
                            )}
                         </div>
                      </div>
@@ -218,18 +218,83 @@ export function ProfilePage() {
                   </div>
                </div>
 
-               <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 rounded-3xl text-white shadow-xl shadow-indigo-100">
-                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md">
-                     <Award className="w-6 h-6 text-white" />
+               {role === 'AGENT' && profile?.agentDetails && (
+                  <div className="bg-white p-8 rounded-3xl border border-[#E5E7EB] shadow-sm space-y-6">
+                     <h3 className="text-sm font-black text-[#111827] uppercase tracking-widest border-b border-[#F3F4F6] pb-4">Business Details</h3>
+                     <div className="space-y-5">
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#6B7280]">
+                              <Briefcase className="w-5 h-5" />
+                           </div>
+                           <div className="flex-1">
+                              <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">Business Name</p>
+                              <p className="text-sm font-bold text-[#111827]">{profile.agentDetails.businessName}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#6B7280]">
+                              <MapPin className="w-5 h-5" />
+                           </div>
+                           <div className="flex-1">
+                              <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">Business Area</p>
+                              <p className="text-sm font-bold text-[#111827]">{profile.agentDetails.businessAreaName}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#6B7280]">
+                              <Shield className="w-5 h-5" />
+                           </div>
+                           <div className="flex-1">
+                              <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">Account Status</p>
+                              <p className="text-sm font-bold text-[#111827] uppercase">{profile.agentDetails.agentStatus}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-[#6B7280]">
+                              <FileText className="w-5 h-5" />
+                           </div>
+                           <div className="flex-1">
+                              <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest">MOU Status</p>
+                              <p className="text-sm font-bold text-[#111827]">{profile.agentDetails.mouStatus}</p>
+                           </div>
+                        </div>
+                     </div>
                   </div>
-                  <h4 className="text-xl font-black mb-2 tracking-tight">Elite Manager</h4>
-                  <p className="text-indigo-100 text-sm font-medium leading-relaxed mb-6">
-                     You are in the top 5% of agent managers this quarter. Keep up the great work!
-                  </p>
-                  <button className="w-full py-3 bg-white text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors">
-                     View Achievements
-                  </button>
-               </div>
+               )}
+
+               {role === 'AGENT_MANAGER' ? (
+                  <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 rounded-3xl text-white shadow-xl shadow-indigo-100">
+                     <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md">
+                        <Award className="w-6 h-6 text-white" />
+                     </div>
+                     <h4 className="text-xl font-black mb-2 tracking-tight">Elite Manager</h4>
+                     <p className="text-indigo-100 text-sm font-medium leading-relaxed mb-6">
+                        You are in the top 5% of agent managers this quarter. Keep up the great work!
+                     </p>
+                     <button className="w-full py-3 bg-white text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors">
+                        View Achievements
+                     </button>
+                  </div>
+               ) : role === 'AGENT' && profile?.agentDetails?.tierDetails && (
+                  <div className="bg-white rounded-3xl border border-[#E5E7EB] shadow-sm p-8 overflow-hidden relative">
+                     <div className={`absolute top-0 right-0 w-32 h-32 rounded-bl-[100px] -z-0 ${profile.agentDetails.tierDetails.badge === 'Gold' || profile.agentDetails.tierDetails.badge === 'Platinum' ? 'bg-amber-100' : profile.agentDetails.tierDetails.badge === 'Silver' ? 'bg-slate-200' : 'bg-orange-50'}`}></div>
+                     <h2 className="text-xl font-black text-[#111827] mb-2 relative z-10 flex items-center gap-2">
+                        <Award className="w-6 h-6 text-amber-500" /> {profile.agentDetails.tierDetails.badge} Tier
+                     </h2>
+                     <p className="text-sm text-[#4B5563] font-bold mb-1 relative z-10">{profile.agentDetails.tierDetails.name}</p>
+                     <p className="text-xs text-[#6B7280] mb-6 relative z-10 line-clamp-2">{profile.agentDetails.tierDetails.bonus || profile.agentDetails.tierDetails.description}</p>
+                     
+                     <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-2">
+                           <span className="text-xs font-bold text-[#4B5563]">Progress to Next Tier</span>
+                           <span className="text-xs font-black text-[#111827]">{profile.agentDetails.tierDetails.currentCount} / {profile.agentDetails.tierDetails.nextTierAt || 'MAX'}</span>
+                        </div>
+                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-2">
+                           <div className="h-full bg-amber-500 rounded-full transition-all duration-1000" style={{ width: `${profile.agentDetails.tierDetails.nextTierAt ? Math.min(100, (profile.agentDetails.tierDetails.currentCount / profile.agentDetails.tierDetails.nextTierAt) * 100) : 100}%` }} />
+                        </div>
+                     </div>
+                  </div>
+               )}
             </div>
 
             {/* RIGHT COLUMN: PERFORMANCE & ACTIVITY */}
@@ -246,61 +311,130 @@ export function ProfilePage() {
                   ))}
                </div>
 
-               <div className="bg-white p-8 rounded-3xl border border-[#E5E7EB] shadow-sm">
-                  <h3 className="text-sm font-black text-[#111827] uppercase tracking-widest mb-8 flex items-center gap-2">
-                     <TrendingUp className="w-4 h-4 text-green-500" />
-                     Performance Growth
-                  </h3>
+               {role === 'AGENT_MANAGER' ? (
+                  <>
+                     <div className="bg-white p-8 rounded-3xl border border-[#E5E7EB] shadow-sm">
+                        <h3 className="text-sm font-black text-[#111827] uppercase tracking-widest mb-8 flex items-center gap-2">
+                           <TrendingUp className="w-4 h-4 text-green-500" />
+                           Performance Growth
+                        </h3>
 
-                  <div className="space-y-8">
-                     <div>
-                        <div className="flex items-center justify-between mb-2">
-                           <span className="text-xs font-bold text-[#4B5563]">Agent Recruitment Goal</span>
-                           <span className="text-xs font-black text-[#111827]">{performance?.recruitmentCount || 0} / {performance?.recruitmentGoal || 20}</span>
-                        </div>
-                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                           <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${(performance?.recruitmentCount / performance?.recruitmentGoal * 100) || 0}%` }} />
+                        <div className="space-y-8">
+                           <div>
+                              <div className="flex items-center justify-between mb-2">
+                                 <span className="text-xs font-bold text-[#4B5563]">Agent Recruitment Goal</span>
+                                 <span className="text-xs font-black text-[#111827]">{performance?.recruitmentCount || 0} / {performance?.recruitmentGoal || 20}</span>
+                              </div>
+                              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                 <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${(performance?.recruitmentCount / performance?.recruitmentGoal * 100) || 0}%` }} />
+                              </div>
+                           </div>
+
+                           <div>
+                              <div className="flex items-center justify-between mb-2">
+                                 <span className="text-xs font-bold text-[#4B5563]">Student Conversion Rate</span>
+                                 <span className="text-xs font-black text-[#111827]">{performance?.conversionRate || 0}%</span>
+                              </div>
+                              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                 <div className="h-full bg-purple-600 rounded-full" style={{ width: `${performance?.conversionRate || 0}%` }} />
+                              </div>
+                           </div>
+
+                           <div>
+                              <div className="flex items-center justify-between mb-2">
+                                 <span className="text-xs font-bold text-[#4B5563]">Follow-up Compliance</span>
+                                 <span className="text-xs font-black text-[#111827]">{performance?.complianceRate || 0}%</span>
+                              </div>
+                              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${performance?.complianceRate || 0}%` }} />
+                              </div>
+                           </div>
                         </div>
                      </div>
 
-                     <div>
-                        <div className="flex items-center justify-between mb-2">
-                           <span className="text-xs font-bold text-[#4B5563]">Student Conversion Rate</span>
-                           <span className="text-xs font-black text-[#111827]">{performance?.conversionRate || 0}%</span>
-                        </div>
-                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                           <div className="h-full bg-purple-600 rounded-full" style={{ width: `${performance?.conversionRate || 0}%` }} />
+                     <div className="bg-white p-8 rounded-3xl border border-[#E5E7EB] shadow-sm">
+                        <h3 className="text-sm font-black text-[#111827] uppercase tracking-widest mb-6">Recent Accomplishments</h3>
+                        <div className="space-y-4">
+                           {[
+                              "Successfully onboarded 'Global Education Hub' in North Area.",
+                              "Achieved 100% follow-up completion for March 2024.",
+                              "Facilitated 15+ student admissions in Canada universities.",
+                              "Conducted area training for 5 new agents."
+                           ].map((item, i) => (
+                              <div key={i} className="flex items-start gap-3 p-4 bg-[#F9FAFB] rounded-2xl border border-transparent hover:border-indigo-100 hover:bg-white transition-all cursor-default">
+                                 <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5" />
+                                 <p className="text-sm font-bold text-[#4B5563]">{item}</p>
+                              </div>
+                           ))}
                         </div>
                      </div>
-
-                     <div>
-                        <div className="flex items-center justify-between mb-2">
-                           <span className="text-xs font-bold text-[#4B5563]">Follow-up Compliance</span>
-                           <span className="text-xs font-black text-[#111827]">{performance?.complianceRate || 0}%</span>
+                  </>
+               ) : (
+                  <div className="bg-white p-8 rounded-3xl border border-[#E5E7EB] shadow-sm space-y-8">
+                     <h3 className="text-sm font-black text-[#111827] uppercase tracking-widest border-b border-[#F3F4F6] pb-4 flex items-center gap-2">
+                        <Award className="w-5 h-5 text-amber-500" />
+                        Commission Tier Structure
+                     </h3>
+                     
+                     <div className="space-y-6">
+                        <div className="space-y-4">
+                           <h4 className="text-xs font-bold text-[#6B7280] uppercase tracking-widest">Category Wise Targets</h4>
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl">
+                                 <h4 className="text-sm font-black text-orange-700">Starter (Bronze)</h4>
+                                 <p className="text-xs text-orange-600 mt-1 font-medium">&lt; 5 Students</p>
+                              </div>
+                              <div className="p-4 bg-slate-100 border border-slate-200 rounded-2xl">
+                                 <h4 className="text-sm font-black text-slate-700">Growth (Silver)</h4>
+                                 <p className="text-xs text-slate-600 mt-1 font-medium">5 to 15 Students</p>
+                              </div>
+                              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                                 <h4 className="text-sm font-black text-amber-700">Pro (Gold)</h4>
+                                 <p className="text-xs text-amber-600 mt-1 font-medium">16 to 30 Students</p>
+                              </div>
+                              <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl">
+                                 <h4 className="text-sm font-black text-indigo-700">Elite (Platinum)</h4>
+                                 <p className="text-xs text-indigo-600 mt-1 font-medium">31 to 100 Students</p>
+                              </div>
+                           </div>
                         </div>
-                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                           <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${performance?.complianceRate || 0}%` }} />
+
+                        <div className="space-y-4 pt-4 border-t border-[#F3F4F6]">
+                           <h4 className="text-xs font-bold text-[#6B7280] uppercase tracking-widest">Commission Bonuses</h4>
+                           <div className="space-y-3">
+                              <div className="flex items-center justify-between p-4 border border-[#E5E7EB] rounded-2xl">
+                                 <div>
+                                    <h4 className="text-sm font-black text-[#111827]">Starter - Bronze</h4>
+                                    <p className="text-xs text-[#6B7280] mt-0.5">Basic</p>
+                                 </div>
+                                 <span className="text-sm font-bold text-[#4B5563]">Regular Commission</span>
+                              </div>
+                              <div className="flex items-center justify-between p-4 border border-[#E5E7EB] rounded-2xl bg-[#F9FAFB]">
+                                 <div>
+                                    <h4 className="text-sm font-black text-[#111827]">Growth - Silver</h4>
+                                    <p className="text-xs text-[#6B7280] mt-0.5">Advanced</p>
+                                 </div>
+                                 <span className="text-sm font-bold text-emerald-600">+ ₹5K per student</span>
+                              </div>
+                              <div className="flex items-center justify-between p-4 border border-[#E5E7EB] rounded-2xl">
+                                 <div>
+                                    <h4 className="text-sm font-black text-[#111827]">Pro - Gold</h4>
+                                    <p className="text-xs text-[#6B7280] mt-0.5">Professional</p>
+                                 </div>
+                                 <span className="text-sm font-bold text-emerald-600">+ ₹7K per student</span>
+                              </div>
+                              <div className="flex items-center justify-between p-4 border border-indigo-100 rounded-2xl bg-indigo-50 shadow-sm">
+                                 <div>
+                                    <h4 className="text-sm font-black text-[#111827] text-[#4F46E5]">Elite - Platinum</h4>
+                                    <p className="text-xs text-indigo-600 mt-0.5">Ultimate</p>
+                                 </div>
+                                 <span className="text-sm font-black text-[#4F46E5]">+ ₹10K per ALL students</span>
+                              </div>
+                           </div>
                         </div>
                      </div>
                   </div>
-               </div>
-
-               <div className="bg-white p-8 rounded-3xl border border-[#E5E7EB] shadow-sm">
-                  <h3 className="text-sm font-black text-[#111827] uppercase tracking-widest mb-6">Recent Accomplishments</h3>
-                  <div className="space-y-4">
-                     {[
-                        "Successfully onboarded 'Global Education Hub' in North Area.",
-                        "Achieved 100% follow-up completion for March 2024.",
-                        "Facilitated 15+ student admissions in Canada universities.",
-                        "Conducted area training for 5 new agents."
-                     ].map((item, i) => (
-                        <div key={i} className="flex items-start gap-3 p-4 bg-[#F9FAFB] rounded-2xl border border-transparent hover:border-indigo-100 hover:bg-white transition-all cursor-default">
-                           <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5" />
-                           <p className="text-sm font-bold text-[#4B5563]">{item}</p>
-                        </div>
-                     ))}
-                  </div>
-               </div>
+               )}
             </div>
          </div>
       </div>

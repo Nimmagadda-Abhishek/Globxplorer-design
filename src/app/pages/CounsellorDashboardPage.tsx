@@ -20,14 +20,17 @@ import {
   Phone,
   Calendar,
   Check,
-  CreditCard
+  CreditCard,
+  HelpCircle
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { counsellorApi } from "../../lib/api";
 import { PaymentRequestModal } from "../components/modals/PaymentRequestModal";
 import { AddStudentModal } from "../components/modals/AddStudentModal";
 
 export function CounsellorDashboardPage() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<any>(null);
   const [urgentActions, setUrgentActions] = useState<any[]>([]);
   const [pipeline, setPipeline] = useState<any[]>([]);
@@ -55,17 +58,22 @@ export function CounsellorDashboardPage() {
         counsellorApi.getMyStudents({ limit: 5 })
       ]);
 
-      const d = statsRes.data;
-      setStats(d.stats);
+      const d = statsRes.data || {};
+      setStats(d.stats || d);
       setFollowUps(d.todayFollowUps || []);
       setChats(d.recentChats || []);
       setWebinars(d.upcomingWebinars || []);
       setKtDocs(d.ktDocs || []);
       setActivity(d.recentActivity || []);
       
-      setUrgentActions(urgentRes.data);
-      setPipeline(pipelineRes.data);
-      setStudents(studentsRes.data);
+      const urgentData = urgentRes.data?.urgentActions || urgentRes.data || urgentRes.urgentActions || [];
+      setUrgentActions(Array.isArray(urgentData) ? urgentData : []);
+
+      const pipeData = pipelineRes.data?.pipeline || pipelineRes.data || pipelineRes.pipeline || [];
+      setPipeline(Array.isArray(pipeData) ? pipeData : []);
+
+      const stData = studentsRes.data?.students || studentsRes.data || studentsRes.students || [];
+      setStudents(Array.isArray(stData) ? stData : []);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
     } finally {
@@ -137,7 +145,7 @@ export function CounsellorDashboardPage() {
                 <AlertCircle className="w-5 h-5 text-red-500" />
                 <h3 className="text-lg font-bold text-[#111827]">Urgent Action Panel</h3>
               </div>
-              <button className="text-xs font-bold text-[#4F46E5] hover:underline">View All</button>
+              <button onClick={() => navigate('/alerts')} className="text-xs font-bold text-[#4F46E5] hover:underline">View All</button>
             </div>
             <div className="divide-y divide-[#E5E7EB]">
               {urgentActions.length > 0 ? urgentActions.map((item, i) => (
@@ -161,7 +169,7 @@ export function CounsellorDashboardPage() {
                     <button className="p-2 bg-gray-50 text-[#4F46E5] rounded-lg hover:bg-indigo-50 transition-colors">
                       <Phone className="w-4 h-4" />
                     </button>
-                    <button className="px-3 py-1.5 bg-[#4F46E5] text-white text-[10px] font-bold rounded-lg hover:bg-[#4338CA] transition-colors">
+                    <button onClick={() => navigate('/students')} className="px-3 py-1.5 bg-[#4F46E5] text-white text-[10px] font-bold rounded-lg hover:bg-[#4338CA] transition-colors">
                       Update Stage
                     </button>
                   </div>
@@ -176,29 +184,30 @@ export function CounsellorDashboardPage() {
           <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-6">
             <h3 className="text-lg font-bold text-[#111827] mb-6">Pipeline Board Overview</h3>
             <div className="flex items-start gap-4 overflow-x-auto pb-4 custom-scrollbar">
-              {['new_lead', 'contacted', 'pending_docs', 'country_shortlist', 'application_started', 'offer_received'].map((stage, i) => {
-                const stageData = pipeline.find(p => p._id === stage);
-                return (
-                  <div key={i} className="min-w-[200px] flex-1 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-[10px] font-black text-[#6B7280] uppercase tracking-widest">{stage.replace('_', ' ')}</h4>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-white border border-gray-200 rounded-md">{stageData?.count || 0}</span>
-                    </div>
-                    <div className="space-y-2">
-                      {stageData?.students.slice(0, 2).map((s: any, j: number) => (
-                        <div key={j} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                          <p className="text-xs font-bold text-[#111827] mb-1">{s.name}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] text-[#9CA3AF] font-black">{s.gxId}</span>
-                            <span className="text-[9px] text-blue-600 font-bold">{s.country}</span>
-                          </div>
-                        </div>
-                      ))}
-                      <button className="w-full py-2 text-[9px] font-black text-[#4F46E5] uppercase tracking-widest hover:bg-white rounded-lg transition-colors">View All</button>
-                    </div>
+              {pipeline.length > 0 ? pipeline.map((stageData, i) => (
+                <div key={i} className="min-w-[200px] flex-1 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-[10px] font-black text-[#6B7280] uppercase tracking-widest">{stageData._id || 'Unknown Stage'}</h4>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 bg-white border border-gray-200 rounded-md">{stageData.count || 0}</span>
                   </div>
-                );
-              })}
+                  <div className="space-y-2">
+                    {(stageData.students || []).slice(0, 2).map((s: any, j: number) => (
+                      <div key={j} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <p className="text-xs font-bold text-[#111827] mb-1">{s.name}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] text-[#9CA3AF] font-black">{s.gxId}</span>
+                          <span className="text-[9px] text-blue-600 font-bold">{s.country || new Date(s.updatedAt || Date.now()).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={() => navigate('/students')} className="w-full py-2 text-[9px] font-black text-[#4F46E5] uppercase tracking-widest hover:bg-white rounded-lg transition-colors">View All</button>
+                  </div>
+                </div>
+              )) : (
+                <div className="w-full py-12 text-center text-[#9CA3AF] font-bold text-sm">
+                  No pipeline data available.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -234,31 +243,97 @@ export function CounsellorDashboardPage() {
             </div>
           </div>
 
-          {/* SECTION 6: MINI CHAT WIDGET */}
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-[#111827]">Recent Chats</h3>
-              <MessageSquare className="w-5 h-5 text-[#4F46E5]" />
+          {/* SECTION 6: COUNSELLOR MANUAL */}
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden flex-1">
+            <div className="px-6 py-5 border-b border-[#F3F4F6] bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#4F46E5] flex items-center justify-center shadow-md shadow-indigo-200">
+                  <HelpCircle className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-[#111827]">Counsellor Manual</h2>
+                  <p className="text-[11px] text-[#6B7280]">Your quick-start guide to GlobXplorer</p>
+                </div>
+              </div>
             </div>
-            <div className="space-y-4">
-               {chats.length > 0 ? chats.map((chat, i) => (
-                 <div key={i} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
-                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center font-bold text-indigo-600 text-xs shrink-0">
-                      {chat.name[0]}
+
+            <div className="overflow-y-auto max-h-[400px]">
+              {/* Quick Start */}
+              <div className="px-6 pt-5 pb-3">
+                <p className="text-[10px] font-black text-[#4F46E5] uppercase tracking-widest mb-3">🚀 Quick Start</p>
+                <div className="space-y-2.5">
+                  {[
+                    { step: "1", text: "Log in with your GX ID & password to view your active students." },
+                    { step: "2", text: "Check your 'Urgent Action Panel' for tasks needing immediate attention." },
+                    { step: "3", text: "Click 'Quick Add' to manually register a new student." },
+                    { step: "4", text: "Monitor the 'Pipeline Board' to move students through application stages." },
+                    { step: "5", text: "Use the 'Follow-ups' panel to keep track of daily calls and meetings." },
+                  ].map(({ step, text }) => (
+                    <div key={step} className="flex items-start gap-3">
+                      <span className="min-w-[22px] h-[22px] rounded-full bg-[#4F46E5] text-white text-[10px] font-black flex items-center justify-center mt-0.5">{step}</span>
+                      <p className="text-xs text-[#374151] leading-relaxed">{text}</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                       <div className="flex items-center justify-between mb-0.5">
-                          <p className="text-xs font-bold text-[#111827]">{chat.name}</p>
-                          <span className="text-[9px] text-[#9CA3AF]">{new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                       </div>
-                       <p className="text-[10px] text-[#6B7280] truncate font-medium">{chat.lastMessage}</p>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mx-6 my-3 border-t border-dashed border-[#E5E7EB]" />
+
+              {/* Features */}
+              <div className="px-6 pb-3">
+                <p className="text-[10px] font-black text-[#6B7280] uppercase tracking-widest mb-3">📌 Key Features</p>
+                <div className="space-y-3">
+                  {[
+                    {
+                      icon: AlertCircle,
+                      color: "bg-red-50 text-red-600",
+                      title: "Urgent Actions",
+                      desc: "Highlights students stuck in stages or pending documents. Resolve these first.",
+                    },
+                    {
+                      icon: BarChart3,
+                      color: "bg-indigo-50 text-indigo-600",
+                      title: "Pipeline Board",
+                      desc: "Visual overview of where your students are in the admission process.",
+                    },
+                    {
+                      icon: Users,
+                      color: "bg-blue-50 text-blue-600",
+                      title: "My Students",
+                      desc: "Detailed table of all students assigned to you. Track progress and view docs.",
+                    },
+                  ].map(({ icon: Icon, color, title, desc }) => (
+                    <div key={title} className="flex items-start gap-3 p-3 rounded-xl border border-[#F3F4F6] hover:border-indigo-100 hover:bg-indigo-50/30 transition-colors group">
+                      <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center shrink-0 mt-0.5`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-[#111827] mb-0.5">{title}</p>
+                        <p className="text-[11px] text-[#6B7280] leading-relaxed">{desc}</p>
+                      </div>
                     </div>
-                    {chat.unread && <div className="w-2 h-2 bg-indigo-600 rounded-full" />}
-                 </div>
-               )) : (
-                 <div className="text-center py-4 text-xs text-gray-400 font-bold italic">No recent chats.</div>
-               )}
-               <button className="w-full py-3 border border-[#E5E7EB] text-[#111827] text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors">Go to Messenger</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mx-6 my-3 border-t border-dashed border-[#E5E7EB]" />
+
+              {/* Tips */}
+              <div className="px-6 pb-6">
+                <p className="text-[10px] font-black text-[#6B7280] uppercase tracking-widest mb-3">💡 Pro Tips</p>
+                <div className="space-y-2">
+                  {[
+                    "Update pipeline stages promptly to keep students informed via their portals.",
+                    "Review KT Docs regularly for the latest university admission requirements.",
+                    "Attend scheduled webinars to stay updated on visa and immigration changes.",
+                  ].map((tip, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="text-[#F59E0B] text-xs mt-0.5">✦</span>
+                      <p className="text-[11px] text-[#374151] leading-relaxed">{tip}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -378,7 +453,7 @@ export function CounsellorDashboardPage() {
                  <div className="col-span-2 text-center py-4 text-xs text-gray-400 font-bold italic">No resources available.</div>
                )}
             </div>
-            <button className="w-full mt-6 py-3 border border-[#E5E7EB] text-[#111827] text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors">All Resources</button>
+            <button onClick={() => navigate('/kt-docs')} className="w-full mt-6 py-3 border border-[#E5E7EB] text-[#111827] text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors">All Resources</button>
          </div>
 
          {/* SECTION 10: NOTIFICATIONS & ACTIVITY */}

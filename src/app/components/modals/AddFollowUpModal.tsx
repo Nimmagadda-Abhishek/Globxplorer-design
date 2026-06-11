@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { X, Loader2 } from "lucide-react";
-import { amApi } from "../../../lib/api";
+import { X, Loader2, PhoneCall, UserPlus } from "lucide-react";
+import { amApi, leadApi } from "../../../lib/api";
 
 interface AddFollowUpModalProps {
   isOpen: boolean;
@@ -9,7 +9,11 @@ interface AddFollowUpModalProps {
 }
 
 export function AddFollowUpModal({ isOpen, onClose, onSuccess }: AddFollowUpModalProps) {
+  const isTelecaller = localStorage.getItem("userRole") === "TELECALLER";
+
   const [loading, setLoading] = useState(false);
+  
+  // AM State
   const [formData, setFormData] = useState({
     targetId: "",
     targetModel: "User",
@@ -20,9 +24,22 @@ export function AddFollowUpModal({ isOpen, onClose, onSuccess }: AddFollowUpModa
     priority: "medium",
   });
 
+  // Telecaller State
+  const [telecallerFormData, setTelecallerFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    status: "Contacted",
+    notes: "",
+    followUpDate: "",
+    country: "",
+    course: "",
+    intake: ""
+  });
+
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAmSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -45,6 +62,142 @@ export function AddFollowUpModal({ isOpen, onClose, onSuccess }: AddFollowUpModa
     }
   };
 
+  const handleTelecallerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await leadApi.createLead(telecallerFormData);
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      console.error("Failed to create lead/follow-up", err);
+      alert("Failed to save follow-up");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isTelecaller) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-[#E5E7EB]">
+          <div className="px-6 py-4 bg-[#F8FAFC] border-b border-[#E5E7EB] flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                <PhoneCall className="w-4 h-4 text-white" />
+              </div>
+              <h2 className="text-lg font-bold text-[#111827]">Log Call / Follow-up</h2>
+            </div>
+            <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#111827] transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleTelecallerSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Name *</label>
+                <input 
+                  type="text" required
+                  value={telecallerFormData.name}
+                  onChange={(e) => setTelecallerFormData({...telecallerFormData, name: e.target.value})}
+                  className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Email</label>
+                <input 
+                  type="email"
+                  value={telecallerFormData.email}
+                  onChange={(e) => setTelecallerFormData({...telecallerFormData, email: e.target.value})}
+                  className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Phone *</label>
+                <input 
+                  type="text" required
+                  value={telecallerFormData.phone}
+                  onChange={(e) => setTelecallerFormData({...telecallerFormData, phone: e.target.value})}
+                  className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Update Status</label>
+                <select 
+                  value={telecallerFormData.status}
+                  onChange={(e) => setTelecallerFormData({...telecallerFormData, status: e.target.value})}
+                  className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                >
+                  <option>Contacted</option>
+                  <option>Call not answered</option>
+                  <option>Interested</option>
+                  <option>Not interested</option>
+                  <option>Follow-up scheduled</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Next Follow-up</label>
+                <input 
+                  type="date"
+                  required={telecallerFormData.status === "Follow-up scheduled"}
+                  value={telecallerFormData.followUpDate}
+                  onChange={(e) => setTelecallerFormData({...telecallerFormData, followUpDate: e.target.value})}
+                  className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Call Notes</label>
+              <textarea 
+                value={telecallerFormData.notes}
+                onChange={(e) => setTelecallerFormData({...telecallerFormData, notes: e.target.value})}
+                placeholder="Summary of the conversation..."
+                className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 h-24"
+              />
+            </div>
+
+            <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-3">
+              <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest flex items-center gap-2">
+                <UserPlus className="w-3 h-3" /> Lead Details
+              </p>
+              <div className="grid grid-cols-1 gap-3">
+                <input 
+                  placeholder="Country"
+                  value={telecallerFormData.country}
+                  onChange={(e) => setTelecallerFormData({...telecallerFormData, country: e.target.value})}
+                  className="w-full px-4 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+                <input 
+                  placeholder="Course (e.g. MBA)"
+                  value={telecallerFormData.course}
+                  onChange={(e) => setTelecallerFormData({...telecallerFormData, course: e.target.value})}
+                  className="w-full px-4 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+                <input 
+                  placeholder="Intake (e.g. 2026)"
+                  value={telecallerFormData.intake}
+                  onChange={(e) => setTelecallerFormData({...telecallerFormData, intake: e.target.value})}
+                  className="w-full px-4 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-[#4F46E5] text-white rounded-xl text-sm font-bold hover:bg-[#4338CA] transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {loading ? "Saving..." : "Save Call Log"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -58,7 +211,7 @@ export function AddFollowUpModal({ isOpen, onClose, onSuccess }: AddFollowUpModa
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <form onSubmit={handleAmSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#111827] mb-2">
