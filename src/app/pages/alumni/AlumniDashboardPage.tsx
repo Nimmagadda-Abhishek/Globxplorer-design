@@ -18,52 +18,44 @@ import { alumniApi } from "../../../lib/api";
 export function AlumniDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalRequests: 0,
+    totalEarned: 0,
+    activeServiceTypes: 0,
     completedServices: 0,
-    earnings: "₹0",
-    referralCount: 0,
-    activeStudentsHelped: 0,
-    pendingApprovals: 0
+    pendingRequests: 0,
+    studentsHelped: 0,
+    profileCompletion: 0,
+    referralEarnings: 0,
+    referralCount: 0
   });
 
   const [profile, setProfile] = useState<any>(null);
-  const [studentRequests, setStudentRequests] = useState<any[]>([]);
-  const [jobs, setJobs] = useState<any[]>([]);
   const [prStatus, setPrStatus] = useState<any>(null);
-  const [salaryStats, setSalaryStats] = useState<any>(null);
-  const [ambassadorStatus, setAmbassadorStatus] = useState<any>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [profileRes, summaryRes, reqRes, jobsRes, prRes, salaryRes, ambRes] = await Promise.all([
+        const [profileRes, summaryRes] = await Promise.all([
           alumniApi.profile.get().catch(() => null),
-          alumniApi.dashboard.getSummary().catch(() => null),
-          alumniApi.communications.getRequests().catch(() => null),
-          alumniApi.jobs.getAll().catch(() => null),
-          alumniApi.prTracker.getStatus().catch(() => null),
-          alumniApi.publicInsights.getSalaryRangeStats().catch(() => null),
-          alumniApi.brandAmbassador.getStatus().catch(() => null)
+          alumniApi.dashboard.getSummary().catch(() => null)
         ]);
         
         if (profileRes?.profile) setProfile(profileRes.profile);
         if (summaryRes) {
           setStats({
-            totalRequests: summaryRes.pendingRequests || 0,
+            totalEarned: summaryRes.totalEarned || 0,
+            activeServiceTypes: summaryRes.activeServiceTypes || 0,
             completedServices: summaryRes.completedServices || 0,
-            earnings: `₹${summaryRes.totalEarned || 0}`,
-            referralCount: summaryRes.referralCount || 0,
+            pendingRequests: summaryRes.pendingRequests || 0,
+            studentsHelped: summaryRes.studentsHelped || 0,
+            profileCompletion: summaryRes.profileCompletion || 0,
             referralEarnings: summaryRes.referralEarnings || 0,
-            activeStudentsHelped: summaryRes.studentsHelped || 0,
-            pendingApprovals: summaryRes.profileCompletion ? `${summaryRes.profileCompletion}%` : "0%"
+            referralCount: summaryRes.referralCount || 0
           });
+          if (summaryRes.prStatus !== undefined) {
+            setPrStatus(summaryRes.prStatus);
+          }
         }
-        if (reqRes?.requests) setStudentRequests(reqRes.requests.slice(0, 3));
-        if (jobsRes?.jobs) setJobs(jobsRes.jobs.slice(0, 2));
-        if (prRes?.status) setPrStatus(prRes.status);
-        if (salaryRes?.ranges) setSalaryStats(salaryRes.ranges[0]);
-        if (ambRes?.applications) setAmbassadorStatus(ambRes.applications[0]);
         
       } catch (error) {
         console.error(error);
@@ -144,12 +136,12 @@ export function AlumniDashboardPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {[
-          { label: "Total Requests", value: stats.totalRequests, icon: MessageSquare, color: "text-blue-600", bg: "bg-blue-100" },
+          { label: "Pending Requests", value: stats.pendingRequests, icon: MessageSquare, color: "text-blue-600", bg: "bg-blue-100" },
           { label: "Completed Services", value: stats.completedServices, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-100" },
-          { label: "Earnings", value: stats.earnings, icon: DollarSign, color: "text-violet-600", bg: "bg-violet-100" },
+          { label: "Total Earned", value: `₹${stats.totalEarned}`, icon: DollarSign, color: "text-violet-600", bg: "bg-violet-100" },
           { label: "Referrals", value: stats.referralCount, icon: LinkIcon, color: "text-indigo-600", bg: "bg-indigo-100" },
-          { label: "Students Helped", value: stats.activeStudentsHelped, icon: Users, color: "text-teal-600", bg: "bg-teal-100" },
-          { label: "Pending Approvals", value: stats.pendingApprovals, icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
+          { label: "Students Helped", value: stats.studentsHelped, icon: Users, color: "text-teal-600", bg: "bg-teal-100" },
+          { label: "Profile Completion", value: `${stats.profileCompletion}%`, icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className={`w-12 h-12 rounded-2xl ${kpi.bg} flex items-center justify-center mb-4`}>
@@ -166,67 +158,62 @@ export function AlumniDashboardPage() {
         {/* Left Column (2 spans): Main content (Requests, Jobs) */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* Latest Student Requests */}
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm">
+          {/* Alumni Role Manual */}
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-black text-slate-900">Latest Student Requests</h3>
-              <Link to="/alumni/students" className="text-sm font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1">
-                View All <ChevronRight className="w-4 h-4" />
-              </Link>
+              <h3 className="text-xl font-black text-slate-900">Alumni Role Manual</h3>
+              <span className="text-sm font-bold text-violet-600 bg-violet-50 px-3 py-1 rounded-lg">
+                Quick Guide
+              </span>
             </div>
-            <div className="space-y-4">
-              {studentRequests.map((req, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border border-slate-100 rounded-2xl hover:bg-slate-50 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center font-bold">
-                      {req.student?.name?.charAt(0) || 'S'}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900">{req.student?.name || 'Unknown Student'}</h4>
-                      <p className="text-xs font-medium text-slate-500">{req.query || 'Mentorship'} • {new Date(req.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-                      req.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                      req.status === 'In Progress' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {req.status}
-                    </span>
-                    <button className="text-xs font-bold text-violet-600 opacity-0 group-hover:opacity-100 transition-opacity">View Request</button>
-                  </div>
+            <div className="flex-1 space-y-6">
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5" />
                 </div>
-              ))}
-            </div>
-          </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900">Student Mentorship</h4>
+                  <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                    Respond to student queries about your university, course, and country. Guide them through their application process and share your authentic experiences to help them make informed decisions.
+                  </p>
+                </div>
+              </div>
 
-          {/* New Job Opportunities */}
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-black text-slate-900">New Job Opportunities</h3>
-              <Link to="/alumni/jobs" className="text-sm font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1">
-                Job Board <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {jobs.map((job) => (
-                <div key={job.id} className="p-5 border border-slate-100 rounded-2xl hover:border-violet-100 hover:bg-violet-50/30 transition-colors group cursor-pointer">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <Briefcase className="w-5 h-5 text-slate-400 group-hover:text-violet-600" />
-                    </div>
-                    <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-lg">
-                      {job.match} Match
-                    </span>
-                  </div>
-                  <h4 className="text-base font-black text-slate-900">{job.title}</h4>
-                  <p className="text-sm font-bold text-slate-700 mt-1">{job.company}</p>
-                  <div className="flex items-center gap-2 mt-3">
-                    <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{job.location}</span>
-                    <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{job.type}</span>
-                  </div>
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
-              ))}
+                <div>
+                  <h4 className="text-sm font-black text-slate-900">Offering Services</h4>
+                  <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                    Offer customized services like SOP reviews, interview prep, or visa consultation. Set your prices and receive secure payments directly to your bank account upon service completion.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900">Career & Job Opportunities</h4>
+                  <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                    Access an exclusive job board tailored for international alumni. Find roles that match your skills, track salary insights, and connect with global employers.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+                  <Target className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900">PR Tracking & Ambassador Program</h4>
+                  <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                    Keep a log of your permanent residency progress in your host country. Additionally, apply to become a GlobXplore Brand Ambassador for special rewards and recognition.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -272,46 +259,7 @@ export function AlumniDashboardPage() {
             </div>
           </div>
 
-          {/* Salary Insights */}
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm">
-            <h3 className="text-base font-black text-slate-900 mb-4">Salary Insights (Your Role)</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-2xl font-black text-slate-900">
-                  {salaryStats?.average || "₹0"} <span className="text-sm font-medium text-slate-500">{salaryStats?.currency || "INR"}/{salaryStats?.period || "yr"}</span>
-                </h4>
-                {salaryStats?.info && <p className="text-xs font-medium text-slate-500 mt-1">{salaryStats.info}</p>}
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                <span className="font-bold text-green-600">{salaryStats?.growth || "+0%"}</span>
-                <span className="font-medium text-slate-500">vs last year</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Upcoming Promotions */}
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                <Award className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-black text-slate-900">Upcoming Promotions</h3>
-            </div>
-            <p className="text-sm font-medium text-slate-600">
-              {ambassadorStatus ? (
-                `Your ${ambassadorStatus.roleType} application is currently ${ambassadorStatus.status}.`
-              ) : (
-                "You haven't applied for the Brand Ambassador program yet."
-              )}
-            </p>
-            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-4">
-              <div className="bg-amber-400 h-1.5 rounded-full" style={{ width: `${ambassadorStatus?.status === 'Approved' ? 100 : (ambassadorStatus ? 50 : 0)}%` }}></div>
-            </div>
-            <Link to="/alumni/ambassador" className="block text-center mt-4 text-xs font-black text-violet-600 uppercase tracking-widest hover:text-violet-700">
-              {ambassadorStatus ? "Check Status" : "Apply Now"}
-            </Link>
-          </div>
 
         </div>
       </div>

@@ -57,6 +57,7 @@ const adminNavGroups = [
   {
     group: "Core Operations",
     items: [
+      { path: "/student-registrations", label: "Student Registrations", icon: UserCheck },
       { path: "/leads", label: "Lead Management", icon: PhoneCall },
       { path: "/pipeline", label: "Student Pipeline", icon: KanbanSquare },
       { path: "/visa-panel", label: "Visa Panel", icon: Briefcase },

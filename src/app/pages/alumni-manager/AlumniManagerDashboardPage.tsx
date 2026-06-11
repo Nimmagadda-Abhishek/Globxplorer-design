@@ -20,35 +20,36 @@ import { alumniManagerApi } from "../../../lib/api";
 export function AlumniManagerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalRegistrations: 0,
-    pendingApprovals: 0,
-    activeUsers: 0,
-    openServiceRequests: 0,
-    revenueThisMonth: "₹0",
-    studentsConnected: 0
+    pendingRegistrations: 0,
+    pendingStudentRequests: 0,
+    pendingServiceRequests: 0,
+    activeAlumni: 0
   });
 
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [serviceRequests, setServiceRequests] = useState<any[]>([]);
-  const [connectRequests, setConnectRequests] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Using Promise.all to fetch dashboard data
-        const [summaryRes, regRes, srvRes, connRes] = await Promise.all([
-          alumniManagerApi.dashboard.getSummary().catch(() => null),
-          alumniManagerApi.registrations.getAll().catch(() => null),
-          alumniManagerApi.services.getRequests().catch(() => null),
-          alumniManagerApi.studentRequests.getAll().catch(() => null)
-        ]);
+        const summaryRes: any = await alumniManagerApi.dashboard.getSummary().catch(() => null);
 
-        if (summaryRes?.data) setStats(summaryRes.data);
-        if (regRes?.data) setRegistrations(regRes.data.slice(0, 5));
-        if (srvRes?.data) setServiceRequests(srvRes.data.slice(0, 5));
-        if (connRes?.data) setConnectRequests(connRes.data.slice(0, 5));
-
+        if (summaryRes?.data) {
+          setStats({
+            pendingRegistrations: summaryRes.data.pendingRegistrations || 0,
+            pendingStudentRequests: summaryRes.data.pendingStudentRequests || 0,
+            pendingServiceRequests: summaryRes.data.pendingServiceRequests || 0,
+            activeAlumni: summaryRes.data.activeAlumni || 0,
+          });
+          
+          if (summaryRes.data.registrations) {
+            setRegistrations(summaryRes.data.registrations.slice(0, 5));
+          }
+          if (summaryRes.data.serviceRequests) {
+            setServiceRequests(summaryRes.data.serviceRequests.slice(0, 5));
+          }
+        }
       } catch (error) {
         console.error("Dashboard fetch error", error);
       } finally {
@@ -92,7 +93,6 @@ export function AlumniManagerDashboardPage() {
   };
 
   const displayRegs = registrations;
-  const displayConnect = connectRequests;
   const displayServices = serviceRequests;
 
   return (
@@ -105,14 +105,12 @@ export function AlumniManagerDashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Registrations", value: stats.totalRegistrations || 0, icon: UserPlus, color: "text-blue-600", bg: "bg-blue-100" },
-          { label: "Pending Approvals", value: stats.pendingApprovals || 0, icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
-          { label: "Active Users", value: stats.activeUsers || 0, icon: Users, color: "text-green-600", bg: "bg-green-100" },
-          { label: "Open Services", value: stats.openServiceRequests || 0, icon: Briefcase, color: "text-purple-600", bg: "bg-purple-100" },
-          { label: "Revenue (MTD)", value: stats.revenueThisMonth || "₹0", icon: DollarSign, color: "text-teal-600", bg: "bg-teal-100" },
-          { label: "Students Connected", value: stats.studentsConnected || 0, icon: LinkIcon, color: "text-indigo-600", bg: "bg-indigo-100" },
+          { label: "Pending Registrations", value: stats.pendingRegistrations, icon: Clock, color: "text-amber-600", bg: "bg-amber-100" },
+          { label: "Pending Student Requests", value: stats.pendingStudentRequests, icon: Users, color: "text-blue-600", bg: "bg-blue-100" },
+          { label: "Pending Service Requests", value: stats.pendingServiceRequests, icon: Briefcase, color: "text-purple-600", bg: "bg-purple-100" },
+          { label: "Active Alumni", value: stats.activeAlumni, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-100" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className={`w-12 h-12 rounded-2xl ${kpi.bg} flex items-center justify-center mb-4`}>
@@ -190,58 +188,62 @@ export function AlumniManagerDashboardPage() {
           </div>
         </div>
 
-        {/* Section 3: Student Connect Panel */}
+        {/* Section 3: Role Manual & Guidelines */}
         <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-black text-slate-900">Student Connect Panel</h3>
-            <Link to="/alumni-manager/students" className="text-sm font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1">
-              View All <ChevronRight className="w-4 h-4" />
-            </Link>
+            <h3 className="text-xl font-black text-slate-900">Role Manual & Guidelines</h3>
+            <span className="text-sm font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-lg">
+              Quick Guide
+            </span>
           </div>
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Request</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Student & Alumni</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Wait Time</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                  <th className="pb-3 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayConnect.map((req, i) => (
-                  <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors group">
-                    <td className="py-4">
-                      <p className="text-sm font-black text-slate-900">{req.type}</p>
-                      <p className="text-xs font-medium text-slate-500">{req.id}</p>
-                    </td>
-                    <td className="py-4">
-                      <p className="text-sm font-bold text-indigo-600">S: {req.student}</p>
-                      <p className="text-sm font-bold text-teal-600">A: {req.alumni || "Unassigned"}</p>
-                    </td>
-                    <td className="py-4 text-sm font-medium text-slate-600">{req.waitTime}</td>
-                    <td className="py-4">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-                        req.status === 'Assigned' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" title="Message">
-                          <MessageSquare className="w-4 h-4" />
-                        </button>
-                        <button className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-colors">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <UserPlus className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-slate-900">Alumni Registrations</h4>
+                <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                  Review new alumni sign-ups. You can view their submitted documents and verify their university details. Approve authentic profiles to integrate them into the global network.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                <Briefcase className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-slate-900">Service Requests</h4>
+                <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                  Monitor both paid and free services requested by students. Ensure payments are confirmed and assign or manage the connection between the student and the respective alumni.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                <LinkIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-slate-900">Connections & Networking</h4>
+                <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                  Facilitate mentorship between prospective students and verified alumni. Track connection statuses, wait times, and step in if a connection request is stalled.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-slate-900">Approvals & Rejections</h4>
+                <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                  Maintain the quality of the network. When rejecting an alumni registration, always provide a clear reason so the applicant understands the missing criteria.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 // API Client for GlobXplore CRM
 import { toast } from "sonner";
-const BASE_URL = 'http://localhost:4000/api';
+const BASE_URL = 'https://api.globxplore.in/api';
 
 /**
  * Basic helper to add auth token
@@ -632,6 +632,48 @@ export const studentApi = {
     });
     return handleResponse(res);
   },
+
+  jobs: {
+    getOpen: async () => {
+      const res = await apiFetch(`${BASE_URL}/student/jobs`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    apply: async (id: string, data: { resumeUrl: string; coverLetter: string }) => {
+      const res = await apiFetch(`${BASE_URL}/student/jobs/${id}/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getHeaders() },
+        body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
+    getApplications: async () => {
+      const res = await apiFetch(`${BASE_URL}/student/applications`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    chat: {
+      getMessages: async (applicationId: string) => {
+        const res = await apiFetch(`${BASE_URL}/student/applications/${applicationId}/chat`, {
+          method: 'GET',
+          headers: getHeaders(),
+        });
+        return handleResponse(res);
+      },
+      sendMessage: async (applicationId: string, data: { message: string }) => {
+        const res = await apiFetch(`${BASE_URL}/student/applications/${applicationId}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getHeaders() },
+          body: JSON.stringify(data),
+        });
+        return handleResponse(res);
+      }
+    }
+  }
 };
 
 // ----------------------------------------------------
@@ -1191,6 +1233,28 @@ export const adminApi = {
   },
 
   students: {
+    getPendingRegistrations: async () => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/pending-registrations`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    approveStudent: async (id: string) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/approve-student/${id}`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    rejectStudent: async (id: string, reason?: string) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/reject-student/${id}`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ reason }),
+      });
+      return handleResponse(res);
+    },
     list: async (params: Record<string, any> = {}) => {
       const query = new URLSearchParams(params).toString();
       const res = await apiFetch(`${ADMIN_BASE_URL}/students?${query}`, {
@@ -2606,6 +2670,15 @@ export const alumniManagerApi = {
       return handleResponse(res);
     }
   },
+  jobs: {
+    getApplications: async () => {
+      const res = await apiFetch(`${ALUMNI_MANAGER_BASE_URL}/jobs/applications`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    }
+  },
   registrations: {
     getPending: async () => {
       const res = await apiFetch(`${ALUMNI_MANAGER_BASE_URL}/pending-alumni`, {
@@ -3047,6 +3120,38 @@ export const alumniApi = {
         headers: getHeaders(),
       });
       return handleResponse(res);
+    },
+    getApplications: async () => {
+      const res = await apiFetch(`${ALUMNI_BASE_URL}/jobs/applications`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    updateApplicationStatus: async (id: string, status: string) => {
+      const res = await apiFetch(`${ALUMNI_BASE_URL}/jobs/applications/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getHeaders() },
+        body: JSON.stringify({ status })
+      });
+      return handleResponse(res);
+    },
+    chat: {
+      getMessages: async (id: string) => {
+        const res = await apiFetch(`${ALUMNI_BASE_URL}/jobs/applications/${id}/chat`, {
+          method: 'GET',
+          headers: getHeaders(),
+        });
+        return handleResponse(res);
+      },
+      sendMessage: async (id: string, message: string) => {
+        const res = await apiFetch(`${ALUMNI_BASE_URL}/jobs/applications/${id}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getHeaders() },
+          body: JSON.stringify({ message })
+        });
+        return handleResponse(res);
+      }
     }
   },
   training: {

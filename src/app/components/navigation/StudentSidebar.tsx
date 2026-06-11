@@ -12,7 +12,8 @@ import {
   Bell,
   User,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Briefcase
 } from "lucide-react";
 
 const studentNavItems = [
@@ -23,6 +24,7 @@ const studentNavItems = [
   { path: "/student/subscription", label: "Subscription", icon: Crown },
   { path: "/student/chat", label: "Chat Support", icon: MessageSquare },
   { path: "/student/alumni", label: "Alumni Connect", icon: Users },
+  { path: "/student/jobs", label: "Jobs", icon: Briefcase },
   { path: "/student/my-bookings", label: "My Bookings", icon: BookOpen },
   { path: "/student/notifications", label: "Notifications", icon: Bell },
   { path: "/student/profile", label: "Profile", icon: User },

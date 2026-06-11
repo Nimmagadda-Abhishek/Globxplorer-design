@@ -11,7 +11,8 @@ import {
   UserCircle, 
   Settings, 
   LogOut,
-  Tag
+  Tag,
+  FileText
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
@@ -31,6 +32,7 @@ export function AlumniManagerSidebar() {
     { icon: Users, label: "Users", path: "/alumni-manager/users" },
     { icon: GraduationCap, label: "Students", path: "/alumni-manager/students" },
     { icon: Briefcase, label: "Service Requests", path: "/alumni-manager/service-requests" },
+    { icon: FileText, label: "Job Applications", path: "/alumni-manager/job-applications" },
     { icon: CreditCard, label: "Payments", path: "/alumni-manager/payments" },
     { icon: MessageSquare, label: "Community Chat", path: "/alumni-manager/community" },
   ];

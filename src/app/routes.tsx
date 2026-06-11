@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { LoginPage } from "./pages/LoginPage";
 import { AlumniRegisterPage } from "./pages/AlumniRegisterPage";
+import { StudentRegisterPage } from "./pages/StudentRegisterPage";
 import { DashboardLayout } from "./components/layouts/DashboardLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -26,6 +27,7 @@ import { ApplicationStatusPage } from "./pages/ApplicationStatusPage";
 // New Admin Pages
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { UsersPage } from "./pages/UsersPage";
+import { StudentRegistrationsPage } from "./pages/StudentRegistrationsPage";
 import { TrackingPage } from "./pages/TrackingPage";
 import { TelecallerStatsPage } from "./pages/TelecallerStatsPage";
 import { CounsellorPanelPage } from "./pages/CounsellorPanelPage";
@@ -59,6 +61,7 @@ import { StudentReferralPage } from "./pages/student/StudentReferralPage";
 import { StudentProfilePage } from "./pages/student/StudentProfilePage";
 import { MyBookingsPage } from "./pages/student/MyBookingsPage";
 import { StudentManualPage } from "./pages/student/StudentManualPage";
+import { StudentJobsPage } from "./pages/student/StudentJobsPage";
 
 // Visa Agent Portal Pages
 import { VisaAgentLayout } from "./components/layouts/VisaAgentLayout";
@@ -87,6 +90,7 @@ import { AlumniUsersPage } from "./pages/alumni-manager/AlumniUsersPage";
 import { AlumniStudentsPage } from "./pages/alumni-manager/AlumniStudentsPage";
 import { AlumniServiceRequestsPage } from "./pages/alumni-manager/AlumniServiceRequestsPage";
 import { AlumniPaymentsPage } from "./pages/alumni-manager/AlumniPaymentsPage";
+import { AlumniManagerJobApplicationsPage } from "./pages/alumni-manager/AlumniManagerJobApplicationsPage";
 
 // Alumni Student Portal Pages
 import { AlumniStudentLayout } from "./components/layouts/AlumniStudentLayout";
@@ -118,6 +122,10 @@ export const router = createBrowserRouter([
     Component: AlumniRegisterPage,
   },
   {
+    path: "/student/register",
+    Component: StudentRegisterPage,
+  },
+  {
     path: "/",
     Component: DashboardLayout,
     errorElement: <ErrorBoundary />,
@@ -139,6 +147,7 @@ export const router = createBrowserRouter([
       { path: "telecaller-stats", Component: TelecallerStatsPage },
       { path: "counsellor-panel", Component: CounsellorPanelPage },
       { path: "agent-panel", Component: AgentPanelPage },
+      { path: "student-registrations", Component: StudentRegistrationsPage },
       { path: "alumni-managers", element: <AlumniManagersPage /> },
       { path: "alumni-managers/:id", element: <AlumniManagerDetailsPage /> },
       
@@ -198,6 +207,7 @@ export const router = createBrowserRouter([
       { path: "notifications", Component: NotificationsPage },
       { path: "profile", Component: StudentProfilePage },
       { path: "manual", Component: StudentManualPage },
+      { path: "jobs", Component: StudentJobsPage },
     ],
   },
   {
@@ -234,6 +244,7 @@ export const router = createBrowserRouter([
       { path: "service-requests", Component: AlumniServiceRequestsPage },
       { path: "pricing", Component: PricingControlPage },
       { path: "payments", Component: AlumniPaymentsPage },
+      { path: "job-applications", Component: AlumniManagerJobApplicationsPage },
       { path: "community", Component: AlumniCommunityPage },
       { path: "reports", Component: AnalyticsPage }, // Placeholder using Analytics
       { path: "notifications", Component: NotificationsPage },

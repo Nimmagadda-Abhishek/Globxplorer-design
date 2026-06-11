@@ -261,6 +261,12 @@ export function LoginPage() {
                 Join our Global Network →
               </Link>
             </div>
+            <div className="pt-2 border-t border-slate-100 mt-3">
+              Are you a Student?{" "}
+              <Link to="/student/register" className="text-indigo-600 hover:text-indigo-700 hover:underline transition-all font-bold">
+                Start your Application →
+              </Link>
+            </div>
           </div>
         </div>
       </div>
