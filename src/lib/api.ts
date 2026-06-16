@@ -1,6 +1,6 @@
 // API Client for GlobXplore CRM
 import { toast } from "sonner";
-const BASE_URL = 'https://api.globxplore.in/api';
+const BASE_URL = 'https://globxplore-1.onrender.com/api';
 
 /**
  * Basic helper to add auth token
