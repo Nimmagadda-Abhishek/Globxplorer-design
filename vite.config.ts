@@ -21,7 +21,7 @@ export default defineConfig({
   assetsInclude: ['**/*.svg', '**/*.csv'],
 
   server: {
-    allowedHosts: ['canorously-isodose-danika.ngrok-free.dev'],
+    allowedHosts: ['*'],
   },
 })
 
