@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, User, MessageCircle, MoreVertical, Upload, FileText, CheckCircle2, AlertCircle, Bell } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, User, MessageCircle, MoreVertical, Upload, FileText, CheckCircle2, AlertCircle, Bell, Plus } from "lucide-react";
 import { studentApi } from "../../lib/api";
 
 export function StudentDetailsPage() {
@@ -59,6 +59,19 @@ export function StudentDetailsPage() {
       setShowStageMenu(false);
     } catch (err) {
       console.error("Failed to update stage", err);
+    }
+  };
+
+  const handleAddNote = async (note: string) => {
+    try {
+      if (!id) return;
+      const updatedNotes = [...(student.notes || []), note];
+      await studentApi.updateStudent(id, { notes: updatedNotes });
+      setStudent({ ...student, notes: updatedNotes });
+      setFormData({ ...formData, notes: updatedNotes });
+    } catch (err) {
+      console.error("Failed to add note", err);
+      alert("Failed to add note");
     }
   };
 
@@ -252,7 +265,7 @@ export function StudentDetailsPage() {
         </div>
 
         <div className="p-6">
-          {activeTab === "overview" && <OverviewTab student={student} isEditing={isEditing} formData={formData} setFormData={setFormData} />}
+          {activeTab === "overview" && <OverviewTab student={student} isEditing={isEditing} formData={formData} setFormData={setFormData} onAddNote={handleAddNote} />}
           {activeTab === "academic" && <AcademicTab student={student} isEditing={isEditing} formData={formData} setFormData={setFormData} />}
           {activeTab === "documents" && <DocumentsTab student={student} studentId={id || ""} />}
           {activeTab === "communication" && <CommunicationTab student={student} />}
@@ -263,7 +276,10 @@ export function StudentDetailsPage() {
   );
 }
 
-function OverviewTab({ student, isEditing, formData, setFormData }: { student: any; isEditing: boolean; formData: any; setFormData: any }) {
+function OverviewTab({ student, isEditing, formData, setFormData, onAddNote }: { student: any; isEditing: boolean; formData: any; setFormData: any; onAddNote: (note: string) => void }) {
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [newNote, setNewNote] = useState("");
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -369,9 +385,48 @@ function OverviewTab({ student, isEditing, formData, setFormData }: { student: a
             No notes have been added for this student yet.
           </div>
         )}
-        <button className="mt-3 text-sm font-medium text-[#4F46E5] hover:text-[#4338CA]">
-          Add Note
-        </button>
+        {isAddingNote ? (
+          <div className="mt-3 space-y-2">
+            <textarea
+              className="w-full p-2 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+              rows={3}
+              placeholder="Type your note here..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+            ></textarea>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (newNote.trim()) {
+                    onAddNote(newNote.trim());
+                    setNewNote("");
+                    setIsAddingNote(false);
+                  }
+                }}
+                disabled={!newNote.trim()}
+                className="px-3 py-1.5 text-xs font-medium bg-[#4F46E5] text-white rounded-md hover:bg-[#4338CA] disabled:opacity-50"
+              >
+                Save Note
+              </button>
+              <button
+                onClick={() => {
+                  setIsAddingNote(false);
+                  setNewNote("");
+                }}
+                className="px-3 py-1.5 text-xs font-medium bg-white border border-[#E5E7EB] text-[#111827] rounded-md hover:bg-[#F3F4F6]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setIsAddingNote(true)}
+            className="mt-3 text-sm font-medium text-[#4F46E5] hover:text-[#4338CA]"
+          >
+            Add Note
+          </button>
+        )}
       </div>
     </div>
   );
@@ -430,6 +485,102 @@ function AcademicTab({ student, isEditing, formData, setFormData }: { student: a
                 <p className="text-sm font-medium text-[#111827]">{student.passingYear || "N/A"}</p>
               )}
             </div>
+          </div>
+
+          <h3 className="text-sm font-medium text-[#111827] mb-3 mt-6">12th / Inter Details</h3>
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-[#6B7280] mb-1">Board / University</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="twelfthBoard"
+                  value={formData.twelfthBoard || ""}
+                  onChange={handleChange}
+                  className="w-full px-3 py-1.5 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+                />
+              ) : (
+                <p className="text-sm font-medium text-[#111827]">{student.twelfthBoard || "N/A"}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-[#6B7280] mb-1">Percentage</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="twelfthPercentage"
+                  value={formData.twelfthPercentage || ""}
+                  onChange={handleChange}
+                  className="w-full px-3 py-1.5 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+                />
+              ) : (
+                <p className="text-sm font-medium text-[#111827]">{student.twelfthPercentage || "N/A"}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-[#6B7280] mb-1">Passing Year</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="twelfthPassingYear"
+                  value={formData.twelfthPassingYear || ""}
+                  onChange={handleChange}
+                  className="w-full px-3 py-1.5 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+                />
+              ) : (
+                <p className="text-sm font-medium text-[#111827]">{student.twelfthPassingYear || "N/A"}</p>
+              )}
+            </div>
+          </div>
+
+          <h3 className="text-sm font-medium text-[#111827] mb-3 mt-6">10th Details</h3>
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-[#6B7280] mb-1">Board</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="tenthBoard"
+                  value={formData.tenthBoard || ""}
+                  onChange={handleChange}
+                  className="w-full px-3 py-1.5 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+                />
+              ) : (
+                <p className="text-sm font-medium text-[#111827]">{student.tenthBoard || "N/A"}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-[#6B7280] mb-1">Percentage</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="tenthPercentage"
+                  value={formData.tenthPercentage || ""}
+                  onChange={handleChange}
+                  className="w-full px-3 py-1.5 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+                />
+              ) : (
+                <p className="text-sm font-medium text-[#111827]">{student.tenthPercentage || "N/A"}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-[#6B7280] mb-1">Passing Year</p>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="tenthPassingYear"
+                  value={formData.tenthPassingYear || ""}
+                  onChange={handleChange}
+                  className="w-full px-3 py-1.5 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+                />
+              ) : (
+                <p className="text-sm font-medium text-[#111827]">{student.tenthPassingYear || "N/A"}</p>
+              )}
+            </div>
+          </div>
+          
+          <h3 className="text-sm font-medium text-[#111827] mb-3 mt-6">Preferences</h3>
+          <div className="space-y-3">
             <div>
               <p className="text-xs text-[#6B7280] mb-1">Intake Preference</p>
               {isEditing ? (
@@ -573,6 +724,10 @@ function DocumentsTab({ student, studentId }: { student: any; studentId: string 
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [requestingDoc, setRequestingDoc] = useState<string | null>(null);
 
+  const [showCustomUpload, setShowCustomUpload] = useState(false);
+  const [customDocName, setCustomDocName] = useState("");
+  const [customDocFile, setCustomDocFile] = useState<File | null>(null);
+
   const initialDocs = [
     { name: "Passport", type: "PASSPORT" },
     { name: "10th Marksheet", type: "ACADEMIC" },
@@ -584,6 +739,15 @@ function DocumentsTab({ student, studentId }: { student: any; studentId: string 
     { name: "Letter of Recommendation 1", type: "OTHER" },
     { name: "Letter of Recommendation 2", type: "OTHER" },
   ];
+
+  // Merge initialDocs with any custom documents already uploaded
+  const existingDocs = student.documents || [];
+  const mergedDocs = [...initialDocs];
+  existingDocs.forEach((doc: any) => {
+    if (!mergedDocs.find(d => d.name === doc.name)) {
+      mergedDocs.push({ name: doc.name, type: doc.type || "OTHER" });
+    }
+  });
 
   const handleUpload = async (docName: string, docType: string, file: File) => {
     try {
@@ -628,7 +792,7 @@ function DocumentsTab({ student, studentId }: { student: any; studentId: string 
   return (
     <div className="text-left">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {initialDocs.map((doc, index) => {
+        {mergedDocs.map((doc, index) => {
           const { status, date } = getDocStatus(doc.name);
           const isUploading = uploadingDoc === doc.name;
 
@@ -690,6 +854,58 @@ function DocumentsTab({ student, studentId }: { student: any; studentId: string 
             </div>
           );
         })}
+
+        {/* Add Custom Document Card */}
+        <div className="p-4 bg-white border-2 border-dashed border-[#E5E7EB] rounded-lg hover:border-[#4F46E5] transition-colors flex flex-col items-center justify-center min-h-[160px]">
+          {showCustomUpload ? (
+            <div className="w-full space-y-3">
+              <input
+                type="text"
+                placeholder="Document Name"
+                value={customDocName}
+                onChange={(e) => setCustomDocName(e.target.value)}
+                className="w-full px-3 py-1.5 text-sm bg-white border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+              />
+              <input
+                type="file"
+                onChange={(e) => e.target.files && setCustomDocFile(e.target.files[0])}
+                className="w-full text-xs"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowCustomUpload(false); setCustomDocName(""); setCustomDocFile(null); }}
+                  className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-white border border-[#E5E7EB] text-[#6B7280] hover:bg-[#F9FAFB]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (customDocName && customDocFile) {
+                      handleUpload(customDocName, "OTHER", customDocFile);
+                      setShowCustomUpload(false);
+                      setCustomDocName("");
+                      setCustomDocFile(null);
+                    }
+                  }}
+                  disabled={!customDocName || !customDocFile || loading}
+                  className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white hover:bg-[#4338CA] disabled:opacity-50"
+                >
+                  Upload
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowCustomUpload(true)}
+              className="flex flex-col items-center justify-center gap-2 text-[#6B7280] hover:text-[#4F46E5]"
+            >
+              <div className="p-3 bg-gray-50 rounded-full">
+                <Plus className="w-6 h-6" />
+              </div>
+              <span className="text-sm font-medium">Add Custom Document</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

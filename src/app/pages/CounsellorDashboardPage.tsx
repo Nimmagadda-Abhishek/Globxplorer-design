@@ -437,23 +437,110 @@ export function CounsellorDashboardPage() {
          {/* SECTION 9: KT DOCS / RESOURCES */}
          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-[#111827]">KT Docs & Resources</h3>
+              <h3 className="text-lg font-bold text-[#111827]">KT Docs &amp; Resources</h3>
               <FileText className="w-5 h-5 text-[#4F46E5]" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-               {ktDocs.length > 0 ? ktDocs.map((res, i) => (
-                 <div key={i} className="bg-blue-50 text-blue-600 p-3 rounded-xl border border-transparent hover:border-current/20 cursor-pointer transition-all">
-                    <p className="text-[10px] font-black uppercase tracking-wider mb-1">{res.title}</p>
-                    <div className="flex items-center gap-1">
-                       <ArrowRight className="w-3 h-3" />
-                       <span className="text-[9px] font-bold">Open</span>
+            <div className="space-y-4">
+              {/* Category: University Guides */}
+              <div>
+                <p className="text-[9px] font-black text-[#4F46E5] uppercase tracking-widest mb-2">🎓 University Guides</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(ktDocs.filter((d: any) => d.category === 'university') .length > 0
+                    ? ktDocs.filter((d: any) => d.category === 'university')
+                    : [
+                        { title: "UK Universities 2026", tag: "PDF" },
+                        { title: "Canada Intake Guide", tag: "PDF" },
+                        { title: "Australia Uni List", tag: "XLS" },
+                        { title: "USA Programs Guide", tag: "PDF" },
+                      ]
+                  ).map((res: any, i: number) => (
+                    <div key={i} className="bg-blue-50 text-blue-700 p-2.5 rounded-xl border border-blue-100 hover:border-blue-300 cursor-pointer transition-all group">
+                      <p className="text-[10px] font-black uppercase tracking-wider mb-1 truncate">{res.title}</p>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[8px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded font-bold">{res.tag || 'DOC'}</span>
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
                     </div>
-                 </div>
-               )) : (
-                 <div className="col-span-2 text-center py-4 text-xs text-gray-400 font-bold italic">No resources available.</div>
-               )}
+                  ))}
+                </div>
+              </div>
+
+              {/* Category: Visa Checklists */}
+              <div>
+                <p className="text-[9px] font-black text-[#10B981] uppercase tracking-widest mb-2">✈️ Visa Checklists</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(ktDocs.filter((d: any) => d.category === 'visa').length > 0
+                    ? ktDocs.filter((d: any) => d.category === 'visa')
+                    : [
+                        { title: "UK Student Visa Docs", tag: "PDF" },
+                        { title: "Canada Study Permit", tag: "PDF" },
+                        { title: "Schengen Checklist", tag: "PDF" },
+                        { title: "Australia Subclass 500", tag: "PDF" },
+                      ]
+                  ).map((res: any, i: number) => (
+                    <div key={i} className="bg-emerald-50 text-emerald-700 p-2.5 rounded-xl border border-emerald-100 hover:border-emerald-300 cursor-pointer transition-all group">
+                      <p className="text-[10px] font-black uppercase tracking-wider mb-1 truncate">{res.title}</p>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[8px] bg-emerald-100 text-emerald-600 px-1 py-0.5 rounded font-bold">{res.tag || 'DOC'}</span>
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category: SOP & Templates */}
+              <div>
+                <p className="text-[9px] font-black text-[#F59E0B] uppercase tracking-widest mb-2">📝 SOP &amp; Templates</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(ktDocs.filter((d: any) => d.category === 'template').length > 0
+                    ? ktDocs.filter((d: any) => d.category === 'template')
+                    : [
+                        { title: "SOP Template v2", tag: "DOCX" },
+                        { title: "LOR Sample Format", tag: "DOCX" },
+                        { title: "Financial Statement", tag: "XLS" },
+                        { title: "Offer Letter Format", tag: "DOCX" },
+                      ]
+                  ).map((res: any, i: number) => (
+                    <div key={i} className="bg-amber-50 text-amber-700 p-2.5 rounded-xl border border-amber-100 hover:border-amber-300 cursor-pointer transition-all group">
+                      <p className="text-[10px] font-black uppercase tracking-wider mb-1 truncate">{res.title}</p>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[8px] bg-amber-100 text-amber-600 px-1 py-0.5 rounded font-bold">{res.tag || 'DOC'}</span>
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category: Training Materials */}
+              <div>
+                <p className="text-[9px] font-black text-[#8B5CF6] uppercase tracking-widest mb-2">📚 Training Materials</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(ktDocs.filter((d: any) => d.category === 'training').length > 0
+                    ? ktDocs.filter((d: any) => d.category === 'training')
+                    : [
+                        { title: "Counsellor Handbook", tag: "PDF" },
+                        { title: "CRM Usage Guide", tag: "PDF" },
+                        { title: "IELTS Score Guide", tag: "PDF" },
+                        { title: "Scholarship Matrix", tag: "XLS" },
+                      ]
+                  ).map((res: any, i: number) => (
+                    <div key={i} className="bg-violet-50 text-violet-700 p-2.5 rounded-xl border border-violet-100 hover:border-violet-300 cursor-pointer transition-all group">
+                      <p className="text-[10px] font-black uppercase tracking-wider mb-1 truncate">{res.title}</p>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[8px] bg-violet-100 text-violet-600 px-1 py-0.5 rounded font-bold">{res.tag || 'DOC'}</span>
+                        <ArrowRight className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <button onClick={() => navigate('/kt-docs')} className="w-full mt-6 py-3 border border-[#E5E7EB] text-[#111827] text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors">All Resources</button>
+            <button onClick={() => navigate('/documents')} className="w-full mt-5 py-3 border border-[#E5E7EB] text-[#111827] text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+              <FileText className="w-3.5 h-3.5" />
+              View All Documents
+            </button>
          </div>
 
          {/* SECTION 10: NOTIFICATIONS & ACTIVITY */}

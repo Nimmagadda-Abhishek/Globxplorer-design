@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { notificationApi } from "../../lib/api";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, Check, Trash2, Filter, Info, AlertTriangle, CreditCard, MessageSquare, Shield, Clock, Search, ExternalLink } from "lucide-react";
+import { PushNotificationToggle } from "../components/notifications/PushNotificationToggle";
 
 export function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -95,6 +96,9 @@ export function NotificationsPage() {
            </button>
         </div>
       </div>
+
+      {/* Web Push Opt-in Toggle */}
+      <PushNotificationToggle />
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* SIDEBAR FILTERS */}

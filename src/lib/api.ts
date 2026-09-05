@@ -1,6 +1,6 @@
 // API Client for GlobXplore CRM
 import { toast } from "sonner";
-const BASE_URL = 'https://globxplore-1.onrender.com/api';
+const BASE_URL = 'http://localhost:4000/api';
 
 /**
  * Basic helper to add auth token
@@ -3356,7 +3356,35 @@ export const notificationApi = {
       headers: getHeaders(),
     });
     return handleResponse(res);
-  }
+  },
+
+  // ---- Web Push Subscription ----
+
+  savePushSubscription: async (data: { endpoint: string; keys: { p256dh: string; auth: string } }) => {
+    const res = await apiFetch(`${BASE_URL}/notifications/push-subscription`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
+
+  deletePushSubscription: async (endpoint: string) => {
+    const res = await apiFetch(`${BASE_URL}/notifications/push-subscription`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+      body: JSON.stringify({ endpoint }),
+    });
+    return handleResponse(res);
+  },
+
+  getVapidPublicKey: async () => {
+    const res = await apiFetch(`${BASE_URL}/notifications/vapid-public-key`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };
 
 // ----------------------------------------------------

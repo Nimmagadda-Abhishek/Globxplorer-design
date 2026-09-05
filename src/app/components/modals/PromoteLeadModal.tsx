@@ -161,10 +161,9 @@ export function PromoteLeadModal({ isOpen, leadId, onClose, onSuccess }: Promote
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#111827] mb-2">Target Country *</label>
+              <label className="block text-sm font-medium text-[#111827] mb-2">Target Country</label>
               <input
                 type="text"
-                required
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -173,10 +172,9 @@ export function PromoteLeadModal({ isOpen, leadId, onClose, onSuccess }: Promote
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#111827] mb-2">Budget Range *</label>
+              <label className="block text-sm font-medium text-[#111827] mb-2">Budget Range</label>
               <input
                 type="text"
-                required
                 value={formData.budgetRange}
                 onChange={(e) => setFormData({ ...formData, budgetRange: e.target.value })}
                 className="w-full px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
