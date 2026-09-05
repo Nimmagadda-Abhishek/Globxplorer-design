@@ -1,6 +1,6 @@
 // API Client for GlobXplore CRM
 import { toast } from "sonner";
-const BASE_URL = 'http://localhost:4000/api';
+const BASE_URL = 'https://subarctic-referable-strainer.ngrok-free.dev/api';
 
 /**
  * Basic helper to add auth token
