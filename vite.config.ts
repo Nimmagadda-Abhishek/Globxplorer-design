@@ -25,7 +25,7 @@ export default defineConfig({
     proxy: {
       // Proxy API requests to the backend during development to avoid CORS issues
       '/api': {
-        target: 'https://subarctic-referable-strainer.ngrok-free.dev',
+        target: 'https://globxplore-2.onrender.com',
         changeOrigin: true,
         secure: true,
         // No rewrite needed; keep the /api prefix
