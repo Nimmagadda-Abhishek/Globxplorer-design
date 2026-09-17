@@ -1,6 +1,6 @@
 // API Client for GlobXplore CRM
 import { toast } from "sonner";
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const BASE_URL = https://globxplore-2.onrender.com/api || '/api';
 
 /**
  * Basic helper to add auth token
