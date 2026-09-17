@@ -1,15 +1,15 @@
 import { X, Loader2, ArrowUpRight, Copy, CheckCircle2, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { leadApi } from "../../../lib/api";
 
 interface PromoteLeadModalProps {
   isOpen: boolean;
-  leadId: string | null;
+  lead: any | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export function PromoteLeadModal({ isOpen, leadId, onClose, onSuccess }: PromoteLeadModalProps) {
+export function PromoteLeadModal({ isOpen, lead, onClose, onSuccess }: PromoteLeadModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [credentials, setCredentials] = useState<{ gxId: string; password: string } | null>(null);
@@ -21,7 +21,18 @@ export function PromoteLeadModal({ isOpen, leadId, onClose, onSuccess }: Promote
     percentage: "",
   });
 
-  if (!isOpen || !leadId) return null;
+  useEffect(() => {
+    if (lead) {
+      setFormData({
+        status: "Interested",
+        country: lead.country && lead.country !== "-" ? lead.country : "",
+        budgetRange: lead.budgetRange || "",
+        percentage: lead.percentage || "",
+      });
+    }
+  }, [lead]);
+
+  if (!isOpen || !lead) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +40,7 @@ export function PromoteLeadModal({ isOpen, leadId, onClose, onSuccess }: Promote
     setError("");
 
     try {
-      const res: any = await leadApi.updateLeadStatus(leadId, formData);
+      const res: any = await leadApi.updateLeadStatus(lead.id, formData);
       if (res.success && res.data?.credentials) {
         setCredentials(res.data.credentials);
         if (onSuccess) onSuccess();

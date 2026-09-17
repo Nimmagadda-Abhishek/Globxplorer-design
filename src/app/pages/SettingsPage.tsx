@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import { User, Bell, Lock, Globe, CreditCard, Users, Building, Briefcase, Upload, FileText, CheckCircle2, Loader2 } from "lucide-react";
-import { adminApi, amApi, agentApi, alumniManagerApi, studentPortalApi, alumniApi, visaAgentApi, authApi } from "../../lib/api";
+import { adminApi, amApi, agentApi, alumniManagerApi, studentPortalApi, alumniApi, visaAgentApi, authApi, counsellorApi } from "../../lib/api";
 import { notificationApi } from "../../lib/api";
+
+import { PushNotificationToggle } from "../components/notifications/PushNotificationToggle";
 
 export function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,31 +45,44 @@ export function SettingsPage() {
     try {
       const currentRole = localStorage.getItem("userRole");
       let res;
-      if (currentRole === "ADMIN") {
-        res = await adminApi.auth.me();
+      if (currentRole === "COUNSELLOR") {
+        res = await counsellorApi.getProfile().catch(() => null);
+      } else if (currentRole === "ADMIN") {
+        res = await adminApi.auth.me().catch(() => null);
       } else if (currentRole === "AGENT_MANAGER") {
-        res = await amApi.profile.get();
+        res = await amApi.profile.get().catch(() => null);
       } else if (currentRole === "AGENT") {
-        res = await agentApi.auth.me();
+        res = await agentApi.auth.me().catch(() => null);
       } else if (currentRole === "ALUMNI_MANAGER") {
-        res = await alumniManagerApi.auth.me();
+        res = await alumniManagerApi.auth.me().catch(() => null);
       } else if (currentRole === "ALUMNI") {
-        res = await alumniApi.profile.get();
+        res = await alumniApi.profile.get().catch(() => null);
       } else if (currentRole === "STUDENT") {
-        res = await studentPortalApi.profile.get();
+        res = await studentPortalApi.profile.get().catch(() => null);
       } else if (currentRole === "VISA_AGENT") {
-        res = await visaAgentApi.me();
+        res = await visaAgentApi.me().catch(() => null);
       } else {
-        res = await adminApi.auth.me();
+        res = await adminApi.auth.me().catch(() => null);
       }
-      setProfile(res.data || res);
+
+      if (res && (res.data || res.name || res.email)) {
+        setProfile(res.data || res);
+      } else {
+        setProfile({
+          name: localStorage.getItem("userName") || "Counsellor",
+          gxId: localStorage.getItem("gxId") || "",
+          role: localStorage.getItem("userRole") || "COUNSELLOR",
+          email: localStorage.getItem("userEmail") || "",
+          phone: localStorage.getItem("userPhone") || ""
+        });
+      }
     } catch (err) {
       console.error("Failed to fetch profile:", err);
       // Fallback
       setProfile({
-        name: localStorage.getItem("userName"),
-        gxId: localStorage.getItem("gxId"),
-        role: localStorage.getItem("userRole"),
+        name: localStorage.getItem("userName") || "Counsellor",
+        gxId: localStorage.getItem("gxId") || "",
+        role: localStorage.getItem("userRole") || "COUNSELLOR",
         email: localStorage.getItem("userEmail") || "",
         phone: localStorage.getItem("userPhone") || ""
       });
@@ -250,6 +265,11 @@ function NotificationSettings() {
     <div>
       <h2 className="text-lg font-black text-[#111827] tracking-tight mb-4">Notification Preferences</h2>
       <div className="space-y-6">
+        <div className="mb-4">
+          <h3 className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest mb-3">Web Push Notifications</h3>
+          <PushNotificationToggle />
+        </div>
+
         <div>
           <h3 className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-widest mb-4">Channel Settings</h3>
           <div className="space-y-4">

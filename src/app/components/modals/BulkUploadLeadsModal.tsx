@@ -22,7 +22,9 @@ export function BulkUploadLeadsModal({ onClose, onSuccess }: BulkUploadLeadsModa
   const fetchTelecallers = async () => {
     try {
       const res: any = await adminApi.telecallers.list();
-      setTelecallers(res.data || []);
+      // Backend returns { data: { telecallers: [...], target: {}, leaderboard: [] } }
+      const list = res?.data?.telecallers ?? res?.data ?? res ?? [];
+      setTelecallers(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error("Failed to fetch telecallers", err);
     }

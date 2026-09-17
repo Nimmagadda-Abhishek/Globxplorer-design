@@ -1,4 +1,4 @@
-import { Gift, Globe, Calendar, CheckCircle2, XCircle, Loader2, Plus, X } from "lucide-react";
+import { Gift, Globe, Calendar, CheckCircle2, XCircle, Loader2, Plus, X, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { adminApi, configApi } from "../../lib/api";
 
@@ -47,6 +47,19 @@ export function PartnerOffersPage() {
     } catch (err: any) {
       console.error("Failed to toggle offer status:", err);
       alert(err.message || "Failed to update offer status");
+    }
+  };
+
+  const handleDeleteOffer = async (offerId: string) => {
+    if (!window.confirm("Are you sure you want to delete this offer permanently?")) {
+      return;
+    }
+    try {
+      await adminApi.system.deleteOffer(offerId);
+      fetchOffers();
+    } catch (err: any) {
+      console.error("Failed to delete offer:", err);
+      alert(err.message || "Failed to delete offer");
     }
   };
 
@@ -207,6 +220,15 @@ export function PartnerOffersPage() {
                   >
                     <CheckCircle2 className="w-4 h-4" />
                   </button>
+                  {canCreate && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteOffer(offer._id); }}
+                      className="p-2 text-[#9CA3AF] hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                      title="Delete Offer (Admin)"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { notificationApi } from "../../../lib/api";
 import { Bell, Mail, Smartphone, MessageCircle, Moon, Globe } from "lucide-react";
 import { toast } from "sonner";
+import { PushNotificationToggle } from "../../components/notifications/PushNotificationToggle";
 
 export default function NotificationSettingsPage() {
   const [prefs, setPrefs] = useState<any>(null);
@@ -52,6 +53,10 @@ export default function NotificationSettingsPage() {
 
       <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
         <div className="p-6 space-y-8">
+          <div className="mb-4">
+            <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Browser Push Notifications</h4>
+            <PushNotificationToggle />
+          </div>
           {settings.map((s) => (
             <div key={s.key} className="flex items-center justify-between gap-4">
               <div className="flex gap-4 min-w-0">

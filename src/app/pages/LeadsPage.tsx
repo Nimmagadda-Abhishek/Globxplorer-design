@@ -10,10 +10,11 @@ import { leadApi, adminApi, userApi } from "../../lib/api";
 
 export function LeadsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [editingLead, setEditingLead] = useState<any>(null);
-  const [promotingLeadId, setPromotingLeadId] = useState<string | null>(null);
+  const [promotingLead, setPromotingLead] = useState<any>(null);
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
@@ -92,6 +93,18 @@ export function LeadsPage() {
   };
 
 
+  const filteredLeads = leads.filter((lead) => {
+    const matchesSearch =
+      !searchTerm ||
+      lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.phone?.includes(searchTerm) ||
+      lead.country?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === "All" || lead.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="p-4 sm:p-6">
       <div className="mb-4 sm:mb-6">
@@ -117,10 +130,19 @@ export function LeadsPage() {
             />
           </div>
           <div className="flex gap-2">
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#F8FAFC] transition-colors">
-              <Filter className="w-4 h-4" />
-              <span className="hidden sm:inline">Filter</span>
-            </button>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="flex-1 sm:flex-none px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#F8FAFC] transition-colors outline-none cursor-pointer"
+            >
+              <option value="All">All Statuses</option>
+              <option value="New">New</option>
+              <option value="Pending">Pending</option>
+              <option value="Interested">Interested</option>
+              <option value="Not Interested">Not Interested</option>
+              <option value="Converted">Converted</option>
+              <option value="Rejected">Rejected</option>
+            </select>
             <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#F8FAFC] transition-colors">
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>
@@ -193,7 +215,7 @@ export function LeadsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E5E7EB]">
-              {leads.map((lead) => (
+              {filteredLeads.map((lead) => (
                 <tr key={lead.id} className="hover:bg-[#F8FAFC] transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -256,7 +278,7 @@ export function LeadsPage() {
                     )}
                     {canPromote && (
                       <button
-                        onClick={() => setPromotingLeadId(lead.id)}
+                        onClick={() => setPromotingLead(lead)}
                         className="text-emerald-600 hover:text-emerald-700 font-semibold"
                       >
                         Promote
@@ -273,8 +295,8 @@ export function LeadsPage() {
         <div className="px-6 py-4 border-t border-[#E5E7EB] flex items-center justify-between">
           <div className="text-sm text-[#6B7280]">
             Showing <span className="font-medium text-[#111827]">1</span> to{" "}
-            <span className="font-medium text-[#111827]">{leads.length}</span> of{" "}
-            <span className="font-medium text-[#111827]">{leads.length}</span> results
+            <span className="font-medium text-[#111827]">{filteredLeads.length}</span> of{" "}
+            <span className="font-medium text-[#111827]">{filteredLeads.length}</span> results
           </div>
           <div className="flex gap-2">
             <button className="px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#6B7280] hover:bg-[#F8FAFC] transition-colors disabled:opacity-50" disabled>
@@ -341,7 +363,7 @@ export function LeadsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E5E7EB]">
-              {leads.map((lead) => (
+              {filteredLeads.map((lead) => (
                 <tr key={lead.id} className="hover:bg-[#F8FAFC] transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -410,7 +432,7 @@ export function LeadsPage() {
                     )}
                     {canPromote && (
                       <button
-                        onClick={() => setPromotingLeadId(lead.id)}
+                        onClick={() => setPromotingLead(lead)}
                         className="text-left text-emerald-600 hover:text-emerald-700 font-semibold"
                       >
                         Promote
@@ -427,8 +449,8 @@ export function LeadsPage() {
         <div className="px-6 py-4 border-t border-[#E5E7EB] flex items-center justify-between">
           <div className="text-sm text-[#6B7280]">
             Showing <span className="font-medium text-[#111827]">1</span> to{" "}
-            <span className="font-medium text-[#111827]">{leads.length}</span> of{" "}
-            <span className="font-medium text-[#111827]">{leads.length}</span> results
+            <span className="font-medium text-[#111827]">{filteredLeads.length}</span> of{" "}
+            <span className="font-medium text-[#111827]">{filteredLeads.length}</span> results
           </div>
 
           <div className="flex gap-2">
@@ -462,9 +484,9 @@ export function LeadsPage() {
         />
       )}
       <PromoteLeadModal
-        isOpen={!!promotingLeadId}
-        leadId={promotingLeadId}
-        onClose={() => setPromotingLeadId(null)}
+        isOpen={!!promotingLead}
+        lead={promotingLead}
+        onClose={() => setPromotingLead(null)}
         onSuccess={handleRefresh}
       />
       {showBulkModal && (

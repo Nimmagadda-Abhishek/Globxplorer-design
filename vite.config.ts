@@ -22,6 +22,14 @@ export default defineConfig({
 
   server: {
     allowedHosts: ['*'],
+    proxy: {
+      // Proxy API requests to the backend during development to avoid CORS issues
+      '/api': {
+        target: 'https://subarctic-referable-strainer.ngrok-free.dev',
+        changeOrigin: true,
+        secure: true,
+        // No rewrite needed; keep the /api prefix
+      },
+    },
   },
 })
-

@@ -159,15 +159,16 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-[2px]">
-      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden border border-[#E5E7EB]">
-        <div className="bg-white border-b border-[#F3F4F6] p-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center">
-               <GraduationCap className="w-6 h-6 text-[#4F46E5]" />
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4 md:p-6 backdrop-blur-[2px]">
+      <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-[#E5E7EB]">
+        {/* Header */}
+        <div className="bg-white border-b border-[#F3F4F6] p-4 sm:p-6 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0">
+               <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-[#4F46E5]" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-[#111827] tracking-tight">Create Student Record</h2>
+              <h2 className="text-lg sm:text-xl font-black text-[#111827] tracking-tight">Create Student Record</h2>
               <p className="text-xs text-[#6B7280] font-medium">Add student to pipeline and link to agent</p>
             </div>
           </div>
@@ -176,15 +177,16 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 overflow-y-auto space-y-6 sm:space-y-8 flex-1">
           {error && (
             <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-700 text-sm font-bold">
-              <AlertCircle className="w-5 h-5" />
-              {error}
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div>
               <label className="block text-[10px] font-black text-[#374151] uppercase tracking-widest mb-2">Student Full Name *</label>
               <input
@@ -373,18 +375,19 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
             </div>
           )}
 
-          <div className="flex gap-4 pt-6">
+          {/* Action Buttons */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-[#F3F4F6]">
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-6 py-4 bg-white border border-[#E5E7EB] rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#6B7280] hover:bg-gray-50 transition-all"
+              className="w-full sm:flex-1 px-6 py-3.5 sm:py-4 bg-white border border-[#E5E7EB] rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#6B7280] hover:bg-gray-50 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 flex justify-center items-center px-6 py-4 bg-[#4F46E5] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#4338CA] transition-all disabled:opacity-70"
+              className="w-full sm:flex-1 flex justify-center items-center px-6 py-3.5 sm:py-4 bg-[#4F46E5] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#4338CA] transition-all disabled:opacity-70"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enroll Student"}
             </button>

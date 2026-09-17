@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, FileText, CheckCircle, Clock, AlertCircle, Download, Loader2, Upload, X, Building2, User, File } from "lucide-react";
+import { Search, FileText, CheckCircle, Clock, AlertCircle, Download, Loader2, Upload, X, Building2, User, File, Check, XCircle, MessageSquare } from "lucide-react";
 import { DocumentPreviewModal } from "../components/modals/DocumentPreviewModal";
 import { documentApi, adminApi } from "../../lib/api";
 
@@ -20,6 +20,12 @@ export function DocumentsPage() {
     rejected: 0
   });
 
+  // Review status modal state
+  const [reviewModal, setReviewModal] = useState<{ docId: string; status: "Approved" | "Rejected"; docName: string; studentName: string } | null>(null);
+  const [reviewComments, setReviewComments] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState("");
+
   // Company docs state
   const [companyDocs, setCompanyDocs] = useState<any[]>([]);
   const [loadingCompanyDocs, setLoadingCompanyDocs] = useState(false);
@@ -31,13 +37,38 @@ export function DocumentsPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
 
+  // Student doc upload modal state (Admin / Staff)
+  const [showStudentDocModal, setShowStudentDocModal] = useState(false);
+  const [studentList, setStudentList] = useState<any[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [studentFile, setStudentFile] = useState<File | null>(null);
+  const [studentDocData, setStudentDocData] = useState({ type: "Passport", name: "" });
+  const [uploadingStudentDoc, setUploadingStudentDoc] = useState(false);
+  const [studentDocError, setStudentDocError] = useState("");
+  const [studentDocSuccess, setStudentDocSuccess] = useState("");
+
   useEffect(() => {
     if (activeTab === "student") {
       fetchDocuments();
+      fetchStudentList();
     } else {
       fetchCompanyDocuments();
     }
   }, [activeTab]);
+
+  const fetchStudentList = async () => {
+    setLoadingStudents(true);
+    try {
+      const res: any = await adminApi.students.list();
+      const raw = res.data?.students || res.students || res.data || [];
+      setStudentList(Array.isArray(raw) ? raw : []);
+    } catch (err) {
+      console.error("Failed to fetch student list", err);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
 
   const fetchDocuments = async () => {
     setLoading(true);
@@ -109,20 +140,66 @@ export function DocumentsPage() {
     }
   };
 
-  const handleViewCompanyDoc = async (id: string) => {
+  const handleStudentDocUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentFile) {
+      setStudentDocError("Please select a file to upload.");
+      return;
+    }
+    if (!selectedStudentId) {
+      setStudentDocError("Please select a target student.");
+      return;
+    }
+    setUploadingStudentDoc(true);
+    setStudentDocError("");
+    setStudentDocSuccess("");
+
+    const formData = new FormData();
+    formData.append("file", studentFile);
+    formData.append("studentId", selectedStudentId);
+    formData.append("type", studentDocData.type);
+    if (studentDocData.name.trim()) {
+      formData.append("name", studentDocData.name.trim());
+    }
+
     try {
-      const res = await adminApi.companyDocuments.getById(id);
-      const docData = res.data || res;
-      if (docData.url) {
-        window.open(docData.url, "_blank");
-      } else if (docData.fileUrl) {
-        window.open(docData.fileUrl, "_blank");
-      } else {
-        alert("Document URL not available.");
-      }
-    } catch (err) {
-      console.error("Failed to view document", err);
-      alert("Failed to retrieve document details.");
+      await documentApi.upload(formData);
+      setStudentDocSuccess("Document uploaded successfully!");
+      setStudentFile(null);
+      setStudentDocData({ type: "Passport", name: "" });
+      setSelectedStudentId("");
+      fetchDocuments();
+      setTimeout(() => {
+        setShowStudentDocModal(false);
+        setStudentDocSuccess("");
+      }, 1200);
+    } catch (err: any) {
+      console.error("Failed to upload student document", err);
+      setStudentDocError(err.message || "Failed to upload document for student.");
+    } finally {
+      setUploadingStudentDoc(false);
+    }
+  };
+
+  const handleStatusSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewModal) return;
+    setUpdatingStatus(true);
+    setStatusError("");
+
+    try {
+      await documentApi.updateStatus(reviewModal.docId, {
+        status: reviewModal.status,
+        comments: reviewComments.trim() || undefined,
+      });
+      setReviewModal(null);
+      setReviewComments("");
+      fetchDocuments();
+    } catch (err: any) {
+      console.error("Failed to update document status", err);
+      setStatusError(err.message || "Failed to update document status.");
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -141,27 +218,43 @@ export function DocumentsPage() {
           <p className="text-xs sm:text-sm text-[#6B7280]">Manage and review all system documents</p>
         </div>
         
-        <div className="flex bg-[#F1F5F9] p-1 rounded-xl">
-          <button
-            onClick={() => setActiveTab("student")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === "student" ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
-            }`}
-          >
-            <User className="w-4 h-4" />
-            Student Docs
-          </button>
+        <div className="flex items-center gap-3">
           {role === "ADMIN" && (
             <button
-              onClick={() => setActiveTab("company")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                activeTab === "company" ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
-              }`}
+              onClick={() => {
+                setStudentDocError("");
+                setStudentDocSuccess("");
+                setShowStudentDocModal(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-[#4F46E5] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#4338CA] transition-all shadow-sm"
             >
-              <Building2 className="w-4 h-4" />
-              Company Docs
+              <Upload className="w-4 h-4" />
+              Upload Student Document
             </button>
           )}
+
+          <div className="flex bg-[#F1F5F9] p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab("student")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "student" ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
+              }`}
+            >
+              <User className="w-4 h-4" />
+              Student Docs
+            </button>
+            {role === "ADMIN" && (
+              <button
+                onClick={() => setActiveTab("company")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  activeTab === "company" ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                Company Docs
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -275,6 +368,42 @@ export function DocumentsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
+                          {role === "ADMIN" && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setStatusError("");
+                                  setReviewComments("");
+                                  setReviewModal({
+                                    docId: doc.id,
+                                    status: "Approved",
+                                    docName: doc.documentType,
+                                    studentName: doc.studentName
+                                  });
+                                }}
+                                className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Approve Document"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setStatusError("");
+                                  setReviewComments("");
+                                  setReviewModal({
+                                    docId: doc.id,
+                                    status: "Rejected",
+                                    docName: doc.documentType,
+                                    studentName: doc.studentName
+                                  });
+                                }}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Reject Document"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={() => setPreviewDoc({ name: doc.documentType, student: doc.studentName })}
                             className="text-sm font-medium text-[#4F46E5] hover:text-[#4338CA]"
@@ -284,6 +413,7 @@ export function DocumentsPage() {
                           <button
                             onClick={() => handleDownload(doc.documentType)}
                             className="p-1 hover:bg-[#F3F4F6] rounded"
+                            title="Download Document"
                           >
                             <Download className="w-4 h-4 text-[#6B7280]" />
                           </button>
@@ -514,6 +644,208 @@ export function DocumentsPage() {
                     {uploading ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>
                     ) : "Upload Document"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Student Document Modal (Admin / Staff) */}
+      {showStudentDocModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div
+              className="fixed inset-0 bg-[#111827]/60 backdrop-blur-sm transition-opacity"
+              onClick={() => !uploadingStudentDoc && setShowStudentDocModal(false)}
+            />
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-[#111827]">Upload Student Document</h2>
+                  <p className="text-xs text-[#6B7280] mt-1">Upload a document directly for a student.</p>
+                </div>
+                <button onClick={() => setShowStudentDocModal(false)} className="p-2 hover:bg-[#F1F5F9] rounded-full transition-colors">
+                  <X className="w-5 h-5 text-[#64748B]" />
+                </button>
+              </div>
+
+              {studentDocError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs font-semibold text-red-600">
+                  {studentDocError}
+                </div>
+              )}
+              {studentDocSuccess && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-100 rounded-xl text-xs font-semibold text-green-600 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                  {studentDocSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleStudentDocUploadSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-2">Select Student *</label>
+                  <select
+                    required
+                    className="w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-sm text-[#0F172A]"
+                    value={selectedStudentId}
+                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                  >
+                    <option value="">-- Choose Target Student --</option>
+                    {studentList.map((st) => (
+                      <option key={st._id || st.id} value={st._id || st.id}>
+                        {st.name || st.fullName} ({st.gxId || st.phone || st.email || "No ID"})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-2">Document File *</label>
+                  <div className="relative border-2 border-dashed border-[#CBD5E1] rounded-xl p-4 hover:bg-[#F8FAFC] transition-colors">
+                    <input
+                      required
+                      type="file"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      onChange={(e) => setStudentFile(e.target.files?.[0] || null)}
+                    />
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <Upload className="w-8 h-8 text-[#94A3B8] mb-2" />
+                      <p className="text-sm font-medium text-[#475569]">
+                        {studentFile ? studentFile.name : "Click or drag file here to upload"}
+                      </p>
+                      {studentFile && <p className="text-xs text-[#64748B] mt-1">{(studentFile.size / 1024 / 1024).toFixed(2)} MB</p>}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-2">Document Type *</label>
+                  <select
+                    className="w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-sm text-[#0F172A]"
+                    value={studentDocData.type}
+                    onChange={(e) => setStudentDocData({ ...studentDocData, type: e.target.value })}
+                  >
+                    <option value="Passport">Passport</option>
+                    <option value="Transcript">Transcript</option>
+                    <option value="Offer Letter">Offer Letter</option>
+                    <option value="Resume">Resume</option>
+                    <option value="IELTS / TOEFL Scorecard">IELTS / TOEFL Scorecard</option>
+                    <option value="Financial Proof">Financial Proof</option>
+                    <option value="LOR / SOP">LOR / SOP</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-2">Display Name (Optional)</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-sm text-[#0F172A]"
+                    placeholder="e.g. Official Passport Scan"
+                    value={studentDocData.name}
+                    onChange={(e) => setStudentDocData({ ...studentDocData, name: e.target.value })}
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowStudentDocModal(false)}
+                    className="flex-1 px-4 py-3 border border-[#E2E8F0] text-[#475569] rounded-xl font-bold text-sm hover:bg-[#F8FAFC] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={uploadingStudentDoc}
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-[#4F46E5] text-white rounded-xl font-bold text-sm hover:bg-[#4338CA] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {uploadingStudentDoc ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>
+                    ) : "Upload Document"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Status Modal (Approve / Reject Document) */}
+      {reviewModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div
+              className="fixed inset-0 bg-[#111827]/60 backdrop-blur-sm transition-opacity"
+              onClick={() => !updatingStatus && setReviewModal(null)}
+            />
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl ${reviewModal.status === "Approved" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
+                    {reviewModal.status === "Approved" ? <Check className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-[#111827]">
+                      {reviewModal.status === "Approved" ? "Approve Document" : "Reject Document"}
+                    </h2>
+                    <p className="text-xs text-[#6B7280]">
+                      {reviewModal.docName} ({reviewModal.studentName})
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setReviewModal(null)} className="p-2 hover:bg-[#F1F5F9] rounded-full transition-colors">
+                  <X className="w-5 h-5 text-[#64748B]" />
+                </button>
+              </div>
+
+              {statusError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs font-semibold text-red-600">
+                  {statusError}
+                </div>
+              )}
+
+              <form onSubmit={handleStatusSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Review Comments / Reason (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    className="w-full px-4 py-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-sm text-[#0F172A] resize-none"
+                    placeholder={
+                      reviewModal.status === "Approved"
+                        ? "e.g., Document verified successfully"
+                        : "e.g., Blurry image. Please re-upload a clear copy."
+                    }
+                    value={reviewComments}
+                    onChange={(e) => setReviewComments(e.target.value)}
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setReviewModal(null)}
+                    className="flex-1 px-4 py-3 border border-[#E2E8F0] text-[#475569] rounded-xl font-bold text-sm hover:bg-[#F8FAFC] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={updatingStatus}
+                    type="submit"
+                    className={`flex-1 px-4 py-3 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+                      reviewModal.status === "Approved" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                    }`}
+                  >
+                    {updatingStatus ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
+                    ) : (
+                      `Confirm ${reviewModal.status}`
+                    )}
                   </button>
                 </div>
               </form>

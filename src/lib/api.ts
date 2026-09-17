@@ -1,6 +1,6 @@
 // API Client for GlobXplore CRM
 import { toast } from "sonner";
-const BASE_URL = 'https://subarctic-referable-strainer.ngrok-free.dev/api';
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Basic helper to add auth token
@@ -183,7 +183,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
       toast.error('Too Many Requests. Please try again later.');
     }
 
-    throw new Error(errorMessage);
+    const apiError: any = new Error(errorMessage);
+    if (data.code) apiError.code = data.code;
+    throw apiError;
   }
   return data;
 }
@@ -280,7 +282,20 @@ export const authApi = {
       body: JSON.stringify(data),
     });
     return handleResponse(res);
-  }
+  },
+
+  /**
+   * Force logout from all devices using credentials (no auth token required).
+   * Called from the login page when the user sees the "already logged in" message.
+   */
+  forceLogout: async (data: { identifier: string; password: string }) => {
+    const res = await apiFetch(`${BASE_URL}/auth/force-logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
 };
 
 // ----------------------------------------------------
@@ -681,6 +696,13 @@ export const studentApi = {
 // ----------------------------------------------------
 
 export const counsellorApi = {
+  getProfile: async () => {
+    const res = await apiFetch(`${BASE_URL}/counsellor/profile`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
   getStats: async () => {
     const res = await apiFetch(`${BASE_URL}/counsellor/dashboard/stats`, {
       method: 'GET',
@@ -1475,6 +1497,13 @@ export const adminApi = {
         method: 'PATCH',
         headers: getHeaders(),
         body: JSON.stringify({ isActive }),
+      });
+      return handleResponse(res);
+    },
+    deleteOffer: async (offerId: string) => {
+      const res = await apiFetch(`${BASE_URL}/offer/${offerId}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
       });
       return handleResponse(res);
     },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Video, Calendar, Clock, ExternalLink, Bookmark, Plus, X } from "lucide-react";
+import { Video, Calendar, Clock, ExternalLink, Plus, X } from "lucide-react";
 import { supportApi } from "../../lib/api";
 
 const TOPIC_TYPES = [
@@ -132,14 +132,11 @@ export function WebinarsPage() {
                   href={session.meetingLink} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-[#4F46E5] text-white rounded-lg text-sm font-semibold hover:bg-[#4338CA] transition-colors whitespace-nowrap shadow-sm"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[#4F46E5] text-white rounded-lg text-sm font-semibold hover:bg-[#4338CA] transition-colors whitespace-nowrap shadow-sm"
                 >
                   Join Meeting
                   <ExternalLink className="w-4 h-4" />
                 </a>
-                <button className="p-2.5 border border-[#E5E7EB] rounded-lg text-[#6B7280] hover:bg-[#F8FAFC] transition-colors shadow-sm">
-                  <Bookmark className="w-4 h-4" />
-                </button>
               </div>
             </div>
           ))

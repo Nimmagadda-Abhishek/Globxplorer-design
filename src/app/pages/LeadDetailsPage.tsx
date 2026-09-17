@@ -131,7 +131,7 @@ export function LeadDetailsPage() {
                     <p className="text-xs font-semibold text-[#6B7280] mb-1.5 flex items-center gap-1.5">
                       <MessageCircle className="w-3.5 h-3.5" /> Notes
                     </p>
-                    <p className="text-sm text-[#111827] bg-[#F8FAFC] p-3 rounded-lg border border-[#E5E7EB]">
+                    <p className="text-sm text-[#111827] bg-[#F8FAFC] p-3 rounded-lg border border-[#E5E7EB] whitespace-pre-wrap">
                       {lead.notes}
                     </p>
                   </div>

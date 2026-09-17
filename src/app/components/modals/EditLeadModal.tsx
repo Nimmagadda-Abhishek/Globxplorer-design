@@ -30,7 +30,7 @@ export function EditLeadModal({ isOpen, onClose, onSuccess, lead }: EditLeadModa
         email: lead.email || "",
         phone: lead.phone || "",
         status: lead.status || "Contacted",
-        notes: lead.notes || "",
+        notes: "",
         followUpDate: lead.followUpDate || "",
         country: lead.country || lead.interestCountry || "",
         course: lead.course || "",
@@ -126,7 +126,7 @@ export function EditLeadModal({ isOpen, onClose, onSuccess, lead }: EditLeadModa
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Call Notes</label>
+            <label className="block text-xs font-bold text-[#4B5563] uppercase tracking-wider mb-2 text-left">Add New Call Notes</label>
             <textarea 
               value={formData.notes}
               onChange={(e) => setFormData({...formData, notes: e.target.value})}

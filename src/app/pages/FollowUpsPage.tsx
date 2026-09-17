@@ -230,7 +230,7 @@ export function FollowUpsPage() {
                       </div>
                     </div>
                     
-                    <p className="text-sm text-[#6B7280]">{followUp.notes || "No additional notes provided."}</p>
+                    <p className="text-sm text-[#6B7280] whitespace-pre-wrap">{followUp.notes || "No additional notes provided."}</p>
                   </div>
                 </div>
                 

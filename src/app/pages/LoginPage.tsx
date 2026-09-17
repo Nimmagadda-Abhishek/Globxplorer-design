@@ -13,7 +13,8 @@ import {
   Headset,
   UserCheck,
   Briefcase,
-  GraduationCap
+  GraduationCap,
+  LogOut
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,11 +27,13 @@ export function LoginPage() {
   const [role, setRole] = useState<UserRole>("ADMIN");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [alreadyLoggedIn, setAlreadyLoggedIn] = useState(false);
+  const [forceLoggingOut, setForceLoggingOut] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const doLogin = async () => {
     setError("");
+    setAlreadyLoggedIn(false);
     setLoading(true);
 
     try {
@@ -111,9 +114,36 @@ export function LoginPage() {
         }
       }
     } catch (err: any) {
-      setError(err.message || "Invalid credentials. Please check your GX ID and password.");
+      if (err?.code === 'ALREADY_LOGGED_IN') {
+        setAlreadyLoggedIn(true);
+        setError(err.message || "You are already logged in on another device. Please logout first.");
+      } else {
+        setAlreadyLoggedIn(false);
+        setError(err.message || "Invalid credentials. Please check your GX ID and password.");
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await doLogin();
+  };
+
+  const handleForceLogout = async () => {
+    setForceLoggingOut(true);
+    try {
+      await authApi.forceLogout({ identifier: gxId, password });
+      toast.success("Logged out from all devices. Signing you in…");
+      setAlreadyLoggedIn(false);
+      setError("");
+      // Automatically retry login now that sessions are cleared
+      await doLogin();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to logout from all devices. Please try again.");
+    } finally {
+      setForceLoggingOut(false);
     }
   };
 
@@ -176,8 +206,23 @@ export function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="p-4 rounded-xl bg-red-50/80 border border-red-100 flex items-start gap-3 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="p-4 rounded-xl bg-red-50/80 border border-red-100 flex flex-col gap-2.5 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="text-red-700 text-sm font-medium leading-relaxed">{error}</div>
+                {alreadyLoggedIn && (
+                  <button
+                    type="button"
+                    onClick={handleForceLogout}
+                    disabled={forceLoggingOut}
+                    className="inline-flex items-center gap-2 self-start px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md hover:-translate-y-px"
+                  >
+                    {forceLoggingOut ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <LogOut className="w-3.5 h-3.5" />
+                    )}
+                    {forceLoggingOut ? "Logging out…" : "Logout from all devices"}
+                  </button>
+                )}
               </div>
             )}
 

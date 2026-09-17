@@ -82,10 +82,10 @@ export function DashboardPage() {
   ];
 
   const performanceStats = [
-    { title: isTelecaller ? "Total Leads" : "Students with Apps", value: isTelecaller ? (summary?.totalLeads || "0") : (summary?.activeStudents || "0") },
-    { title: isTelecaller ? "New Leads" : "Total Apps", value: isTelecaller ? (summary?.newLeadsToday || "0") : (summary?.applicationsSubmitted || "0") },
-    { title: isTelecaller ? "Leads you have contacted" : "Students with Offers", value: isTelecaller ? (summary?.leadsContacted || "0") : (summary?.offerLettersReceived || "0") },
-    { title: isTelecaller ? "Pending Leads" : "Total Payments Done", value: isTelecaller ? (summary?.pendingLeads || "0") : (summary?.totalPayments || "0") },
+    { title: isTelecaller ? "Total Leads" : "Students with Apps", value: isTelecaller ? (summary?.totalLeads || "0") : (summary?.activeStudents || "0"), path: isTelecaller ? "/leads" : "/pipeline" },
+    { title: isTelecaller ? "New Leads" : "Total Apps", value: isTelecaller ? (summary?.newLeadsToday || "0") : (summary?.applicationsSubmitted || "0"), path: isTelecaller ? "/queue" : "/pipeline" },
+    { title: isTelecaller ? "Leads you have contacted" : "Students with Offers", value: isTelecaller ? (summary?.leadsContacted || "0") : (summary?.offerLettersReceived || "0"), path: isTelecaller ? "/follow-ups" : "/pipeline" },
+    { title: isTelecaller ? "Pending Leads" : "Total Payments Done", value: isTelecaller ? (summary?.pendingLeads || "0") : (summary?.totalPayments || "0"), path: isTelecaller ? "/queue" : "/payments" },
   ];
 
   const pendingActions = isTelecaller ? [
@@ -356,7 +356,7 @@ export function DashboardPage() {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 {performanceStats.map((stat, i) => (
-                  <div key={i} className="relative p-5 bg-white border border-[#E5E7EB] rounded-xl hover:shadow-md transition-shadow">
+                  <div key={i} onClick={() => navigate(stat.path)} className="relative p-5 bg-white border border-[#E5E7EB] rounded-xl hover:shadow-md transition-shadow cursor-pointer">
                     <div className="absolute left-0 top-4 bottom-4 w-1 bg-[#4F46E5] rounded-r-full" />
                     <div className="flex justify-between items-start mb-1">
                       <span className="text-sm font-medium text-[#6B7280]">{stat.title}</span>
