@@ -160,17 +160,18 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
     const normalized = String(errorMessage || '').toLowerCase();
     const isLoginRequest = response.url && response.url.includes('/auth/login');
+    // A 403 means the current user is authenticated but is not allowed to
+    // perform this action. Do not treat it as an expired session: doing so
+    // logs a telecaller out when lead promotion is denied by permissions.
+    const isExplicitTokenFailure =
+      normalized.includes('invalid token') ||
+      normalized.includes('invalid tocken') ||
+      normalized.includes('session expired');
     const isInvalidToken =
-      !isLoginRequest && (
-        normalized.includes('invalid token') ||
-        normalized.includes('invalid tocken') ||
-        normalized.includes('session expired') ||
-        response.status === 401 ||
-        response.status === 403
-      );
+      !isLoginRequest && (response.status === 401 || isExplicitTokenFailure);
 
     if (isInvalidToken) {
-      errorMessage = 'The session expired please login';
+      errorMessage = 'The session expired. Please log in again.';
 
       // Avoid immediate logout redirect right after a successful login.
       // Let the page/app handle the error and/or retry with the new token.
