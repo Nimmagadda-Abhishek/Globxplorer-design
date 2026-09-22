@@ -605,15 +605,6 @@ export const studentApi = {
     return handleResponse(res);
   },
 
-  sendMessage: async (id: string, data: { text: string }) => {
-    const res = await apiFetch(`${BASE_URL}/student/${id}/message`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(data),
-    });
-    return handleResponse(res);
-  },
-
   updateStudent: async (id: string, data: Record<string, any>) => {
     const res = await apiFetch(`${BASE_URL}/student/${id}`, {
       method: 'PUT',
@@ -1006,6 +997,13 @@ export const adminApi = {
         headers: getHeaders(),
       });
       return handleResponse(res);
+    },
+    delete: async (id: string) => {
+      const res = await apiFetch(`${ADMIN_BASE_URL}/documents/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
     }
   },
   auth: {
@@ -1148,8 +1146,11 @@ export const adminApi = {
       });
       return handleResponse(res);
     },
-    getAnalytics: async (id: string) => {
-      const res = await apiFetch(`${ADMIN_BASE_URL}/alumni-managers/${id}/analytics`, {
+    getAnalytics: async (id: string, weeklyTarget?: number) => {
+      const query = weeklyTarget !== undefined
+        ? `?weeklyTarget=${encodeURIComponent(weeklyTarget)}`
+        : '';
+      const res = await apiFetch(`${ADMIN_BASE_URL}/alumni-managers/${id}/analytics${query}`, {
         method: 'GET',
         headers: getHeaders(),
       });
@@ -1979,6 +1980,13 @@ export const studentPortalApi = {
       });
       return handleResponse(res);
     },
+    getAnnouncements: async () => {
+      const res = await apiFetch(`${BASE_URL}/student/announcements`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
     getAlerts: async () => {
       const res = await apiFetch(`${BASE_URL}/student/alerts`, {
         method: 'GET',
@@ -2009,16 +2017,6 @@ export const studentPortalApi = {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(data),
-      });
-      return handleResponse(res);
-    }
-  },
-  chat: {
-    sendMessage: async (id: string, text: string) => {
-      const res = await apiFetch(`${BASE_URL}/student/${id}/message`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ text }),
       });
       return handleResponse(res);
     }
@@ -2437,6 +2435,14 @@ export const visaAgentApi = {
         method: 'PATCH',
         headers: getHeaders(),
         body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
+    markBooked: async (clientId: string) => {
+      const res = await apiFetch(`${VISA_AGENT_BASE_URL}/clients/${clientId}/appointment/booked`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ status: 'booked' }),
       });
       return handleResponse(res);
     },
@@ -2903,9 +2909,24 @@ export const alumniManagerApi = {
     }
   },
   community: {
+    getActiveCounts: async () => {
+      const res = await apiFetch(`${ALUMNI_MANAGER_BASE_URL}/users/active-counts`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
     createAnnouncement: async (data: Record<string, any>) => {
       const res = await apiFetch(`${ALUMNI_MANAGER_BASE_URL}/community/announcement`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getHeaders() },
+        body: JSON.stringify(data),
+      });
+      return handleResponse(res);
+    },
+    updateAnnouncement: async (id: string, data: Record<string, any>) => {
+      const res = await apiFetch(`${ALUMNI_MANAGER_BASE_URL}/community/announcement/${id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...getHeaders() },
         body: JSON.stringify(data),
       });
@@ -2989,6 +3010,13 @@ export const alumniApi = {
   dashboard: {
     getSummary: async () => {
       const res = await apiFetch(`${ALUMNI_BASE_URL}/dashboard/summary`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+      return handleResponse(res);
+    },
+    getAnnouncements: async () => {
+      const res = await apiFetch(`${BASE_URL}/alumni/announcements`, {
         method: 'GET',
         headers: getHeaders(),
       });

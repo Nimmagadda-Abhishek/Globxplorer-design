@@ -184,7 +184,6 @@ export function StudentChatPage() {
   const supportOptions = [
     { id: 'counsellor', title: "Chat with Counsellor", desc: "Instant guidance on your application and documents.", icon: MessageSquare, color: "bg-indigo-600", active: true, agent: "Counsellor" },
     { id: 'concern', title: "Raise a Concern", desc: "Not happy with the service? Let us know directly.", icon: AlertTriangle, color: "bg-rose-600", active: false, info: "Unresolved issues are escalated after 24h." },
-    { id: 'whatsapp', title: "WhatsApp Admin", desc: "Connect with our head office for urgent queries.", icon: MessageCircle, color: "bg-[#25D366]", active: false }
   ];
 
   return (
@@ -237,13 +236,6 @@ export function StudentChatPage() {
                 </div>
               </div>
             ))}
-            <div className="p-6 bg-slate-900 rounded-[2rem] text-white overflow-hidden relative">
-              <h4 className="text-sm font-black mb-2">Emergency Help?</h4>
-              <p className="text-[10px] font-medium text-slate-400 mb-4">Call our 24/7 helpline for immediate assistance.</p>
-              <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-colors">
-                <Phone className="w-3.5 h-3.5" /> Support
-              </button>
-            </div>
           </div>
 
           {/* Support Chat Area */}

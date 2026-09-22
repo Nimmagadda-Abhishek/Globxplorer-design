@@ -190,6 +190,19 @@ export function ClientProfilePage() {
       }
    };
 
+   const handleMarkSlotMonitoringDone = async () => {
+      try {
+         setIsUpdating(true);
+         await visaAgentApi.appointments.markBooked(id!);
+         toast.success("Slot monitoring marked as done");
+         await fetchClientDetails();
+      } catch (err: any) {
+         toast.error(err.message || "Failed to mark slot monitoring as done");
+      } finally {
+         setIsUpdating(false);
+      }
+   };
+
    const handleSetReschedule = async () => {
       try {
          setIsUpdating(true);
@@ -292,6 +305,19 @@ export function ClientProfilePage() {
          setShowDS160Modal(false);
       } catch (err: any) {
          toast.error(err.message || "Failed to update DS-160");
+      } finally {
+         setIsUpdating(false);
+      }
+   };
+
+   const handleDS160Done = async () => {
+      setIsUpdating(true);
+      try {
+         await visaAgentApi.ds160.updateStatus(id!, 'submitted');
+         toast.success("DS-160 marked as done");
+         await fetchClientDetails();
+      } catch (err: any) {
+         toast.error(err.message || "Failed to mark DS-160 as done");
       } finally {
          setIsUpdating(false);
       }
@@ -704,6 +730,14 @@ export function ClientProfilePage() {
                                     Update DS-160 Status
                                     <ChevronRight className="w-4 h-4" />
                                  </button>
+                                 <button
+                                    onClick={handleDS160Done}
+                                    disabled={isUpdating || ['submitted', 'completed', 'done'].includes((client.ds160Status || '').toLowerCase())}
+                                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm tracking-widest uppercase hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-100"
+                                 >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    {['submitted', 'completed', 'done'].includes((client.ds160Status || '').toLowerCase()) ? 'DS-160 Done' : 'Mark DS-160 as Done'}
+                                 </button>
                                  <button className="w-full py-4 bg-white border border-[#E5E7EB] text-[#4B5563] rounded-2xl font-black text-sm tracking-widest uppercase hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
                                     <Download className="w-4 h-4" />
                                     Upload Confirmation PDF
@@ -884,6 +918,13 @@ export function ClientProfilePage() {
                                        className="px-6 py-2 bg-[#111827] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50"
                                     >
                                        Start Monitoring
+                                    </button>
+                                    <button
+                                       onClick={handleMarkSlotMonitoringDone}
+                                       disabled={isUpdating || client.stage === 'slot_booked'}
+                                       className="px-6 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                       {client.stage === 'slot_booked' ? 'Monitoring Done' : 'Mark Monitoring Done'}
                                     </button>
                                  </div>
                               </div>

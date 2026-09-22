@@ -150,7 +150,6 @@ export function PaymentsPage() {
                 <th className="px-6 py-4 text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider">Amount</th>
                 <th className="px-6 py-4 text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider">Date</th>
-                <th className="px-6 py-4 text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F3F4F6]">
@@ -168,11 +167,6 @@ export function PaymentsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-5 text-sm font-medium text-[#6B7280]">{tx.date}</td>
-                  <td className="px-6 py-5 text-right">
-                    <button className="p-2 text-[#9CA3AF] hover:text-[#111827] hover:bg-gray-100 rounded-lg">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>

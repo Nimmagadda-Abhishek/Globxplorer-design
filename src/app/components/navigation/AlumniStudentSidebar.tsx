@@ -12,7 +12,8 @@ import {
   UserCircle, 
   LogOut,
   GraduationCap,
-  ShoppingBag
+  ShoppingBag,
+  Megaphone
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
@@ -28,6 +29,7 @@ export function AlumniStudentSidebar() {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/alumni" },
+    { icon: Megaphone, label: "Announcements", path: "/alumni/announcements" },
     { icon: CreditCard, label: "Payments", path: "/alumni/payments" },
     { icon: Briefcase, label: "Service Registration", path: "/alumni/services" },
     { icon: ShoppingBag, label: "Service Bookings", path: "/alumni/bookings" },

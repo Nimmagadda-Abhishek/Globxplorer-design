@@ -14,6 +14,7 @@ import {
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { alumniApi } from "../../../lib/api";
+import { AnnouncementPreview, Announcement } from "../../components/shared/Announcements";
 
 export function AlumniDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -30,15 +31,18 @@ export function AlumniDashboardPage() {
 
   const [profile, setProfile] = useState<any>(null);
   const [prStatus, setPrStatus] = useState<any>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [profileRes, summaryRes] = await Promise.all([
+        const responses: any[] = await Promise.all([
           alumniApi.profile.get().catch(() => null),
-          alumniApi.dashboard.getSummary().catch(() => null)
+          alumniApi.dashboard.getSummary().catch(() => null),
+          alumniApi.dashboard.getAnnouncements().catch(() => null)
         ]);
+        const [profileRes, summaryRes, announcementsRes] = responses;
         
         if (profileRes?.profile) setProfile(profileRes.profile);
         if (summaryRes) {
@@ -56,6 +60,8 @@ export function AlumniDashboardPage() {
             setPrStatus(summaryRes.prStatus);
           }
         }
+        const announcementData = announcementsRes?.data || announcementsRes || [];
+        setAnnouncements(Array.isArray(announcementData) ? announcementData : []);
         
       } catch (error) {
         console.error(error);
@@ -152,6 +158,8 @@ export function AlumniDashboardPage() {
           </div>
         ))}
       </div>
+
+      <AnnouncementPreview announcements={announcements} path="/alumni/announcements" accent="violet" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         

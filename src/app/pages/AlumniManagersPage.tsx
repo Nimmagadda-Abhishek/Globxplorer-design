@@ -26,6 +26,7 @@ export function AlumniManagersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -175,7 +176,7 @@ export function AlumniManagersPage() {
                     </button>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-2 relative">
                       <Link 
                         to={`/alumni-managers/${manager._id}`}
                         className="p-2 text-[#6B7280] hover:text-[#4F46E5] hover:bg-indigo-50 rounded-lg transition-colors"
@@ -183,9 +184,32 @@ export function AlumniManagersPage() {
                       >
                         <BarChart3 className="w-4 h-4" />
                       </Link>
-                      <button className="p-2 text-[#6B7280] hover:text-[#111827] hover:bg-gray-100 rounded-lg transition-colors">
+                      <button
+                        onClick={() => setOpenActionMenu((current) => current === manager._id ? null : manager._id)}
+                        className="p-2 text-[#6B7280] hover:text-[#111827] hover:bg-gray-100 rounded-lg transition-colors"
+                        title="More actions"
+                        aria-label={`More actions for ${manager.name}`}
+                        aria-expanded={openActionMenu === manager._id}
+                      >
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
+                      {openActionMenu === manager._id && (
+                        <div className="absolute right-0 top-11 z-20 w-48 rounded-xl border border-[#E5E7EB] bg-white p-1 text-left shadow-lg">
+                          <button
+                            onClick={() => {
+                              setOpenActionMenu(null);
+                              handleStatusToggle(manager._id, manager.isActive);
+                            }}
+                            className={`w-full rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                              manager.isActive
+                                ? "text-red-600 hover:bg-red-50"
+                                : "text-green-600 hover:bg-green-50"
+                            }`}
+                          >
+                            {manager.isActive ? "Deactivate account" : "Activate account"}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -199,13 +199,13 @@ export function AlumniManagerDetailsPage() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-bold text-[#374151]">Approval Efficiency</span>
                   <span className="text-sm font-black text-[#4F46E5]">
-                    {analytics?.requestsHandled > 0 ? Math.round((analytics.alumniApproved / analytics.requestsHandled) * 100) : 0}%
+                    {analytics?.approvalEfficiency ?? 0}%
                   </span>
                 </div>
                 <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                    <div 
                     className="h-full bg-[#4F46E5] rounded-full transition-all duration-1000" 
-                    style={{ width: `${analytics?.requestsHandled > 0 ? Math.min((analytics.alumniApproved / analytics.requestsHandled) * 100, 100) : 0}%` }}
+                    style={{ width: `${Math.min(Math.max(analytics?.approvalEfficiency || 0, 0), 100)}%` }}
                    />
                 </div>
               </div>
@@ -213,11 +213,22 @@ export function AlumniManagerDetailsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 border border-[#E5E7EB] rounded-xl">
                   <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider mb-1">Weekly Target</p>
-                  <p className="text-xl font-black text-[#111827]">15 / 20</p>
+                  <p className="text-xl font-black text-[#111827]">
+                    {analytics?.weeklyCompleted ?? 0} / {analytics?.weeklyTarget ?? 0}
+                  </p>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-3">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min(Math.max(analytics?.weeklyProgress || 0, 0), 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] font-bold text-[#6B7280] mt-2">
+                    {analytics?.weeklyProgress ?? 0}% complete
+                  </p>
                 </div>
                 <div className="p-4 border border-[#E5E7EB] rounded-xl">
-                  <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider mb-1">System Uptime</p>
-                  <p className="text-xl font-black text-[#111827]">99.8%</p>
+                  <p className="text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider mb-1">Weekly Completed</p>
+                  <p className="text-xl font-black text-[#111827]">{analytics?.weeklyCompleted ?? 0}</p>
                 </div>
               </div>
             </div>

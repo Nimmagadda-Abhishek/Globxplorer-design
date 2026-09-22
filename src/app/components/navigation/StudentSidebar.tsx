@@ -13,11 +13,13 @@ import {
   User,
   LogOut,
   ChevronRight,
-  Briefcase
+  Briefcase,
+  Megaphone
 } from "lucide-react";
 
 const studentNavItems = [
   { path: "/student", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/student/announcements", label: "Announcements", icon: Megaphone },
   { path: "/student/application", label: "My Application", icon: GraduationCap },
   { path: "/student/documents", label: "Documents", icon: FileText },
   { path: "/student/payments", label: "Payments", icon: CreditCard },
@@ -42,13 +44,14 @@ export function StudentSidebar() {
     <aside className="w-64 bg-white border-r border-slate-100 flex flex-col h-full">
       <div className="p-6 border-b border-slate-50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
-            <img src="/favicon.jpg" alt="GlobXplore" className="w-full h-full object-cover" />
-          </div>
+        <div className="flex items-center gap-2">
+            <img src="/favicon.png" alt="GlobXplore" className="w-50 h-10 object-contain" />
+          <div className="flex flex-row items-center">
           <div>
-            <h1 className="text-lg font-bold text-slate-900 leading-tight">GlobXplore</h1>
             <p className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">Student Portal</p>
           </div>
+        </div>
+      </div>
         </div>
       </div>
 

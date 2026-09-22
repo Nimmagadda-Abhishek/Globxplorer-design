@@ -48,14 +48,6 @@ export function VisaAgentProfilePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row items-center gap-8 bg-white border border-slate-100 rounded-[3rem] p-8 shadow-sm">
-        <div className="relative group">
-          <div className="w-32 h-32 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center border-4 border-white shadow-xl overflow-hidden">
-            <User className="w-16 h-16 text-indigo-600" />
-          </div>
-          <button className="absolute bottom-0 right-0 p-2.5 bg-slate-900 text-white rounded-2xl shadow-lg border-2 border-white hover:bg-indigo-600 transition-all">
-            <Camera className="w-4 h-4" />
-          </button>
-        </div>
         <div className="text-center md:text-left flex-1">
           <div className="flex flex-col md:flex-row md:items-center gap-3">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">{profile?.name || "Visa Agent"}</h1>

@@ -1,22 +1,21 @@
-import { Search, Plus, Filter, MoreVertical, LayoutGrid, List as ListIcon, ChevronRight, User, Loader2, Globe, FileText, CreditCard, CalendarCheck } from "lucide-react";
+import { Search, Plus, Filter, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { visaAgentApi } from "../../../lib/api";
 
 const stages = [
-  { id: "client_created", name: "Client Created", color: "bg-slate-500", icon: User },
-  { id: "ds160_pending", name: "DS160 Pending", color: "bg-blue-500", icon: FileText },
-  { id: "ds160_submitted", name: "DS160 Submitted", color: "bg-indigo-500", icon: FileText },
-  { id: "payment_pending", name: "Payment Pending", color: "bg-amber-500", icon: CreditCard },
-  { id: "payment_completed", name: "Payment Completed", color: "bg-emerald-500", icon: CreditCard },
-  { id: "slot_monitoring", name: "Slot Monitoring", color: "bg-purple-500", icon: Globe },
-  { id: "slot_booked", name: "Slot Booked", color: "bg-pink-500", icon: CalendarCheck },
-  { id: "approved", name: "Visa Approved", color: "bg-green-500", icon: CalendarCheck },
+  { id: "client_created", name: "Client Created", color: "bg-slate-500" },
+  { id: "ds160_pending", name: "DS160 Pending", color: "bg-blue-500" },
+  { id: "ds160_submitted", name: "DS160 Submitted", color: "bg-indigo-500" },
+  { id: "payment_pending", name: "Payment Pending", color: "bg-amber-500" },
+  { id: "payment_completed", name: "Payment Completed", color: "bg-emerald-500" },
+  { id: "slot_monitoring", name: "Slot Monitoring", color: "bg-purple-500" },
+  { id: "slot_booked", name: "Slot Booked", color: "bg-pink-500" },
+  { id: "approved", name: "Visa Approved", color: "bg-green-500" },
 ];
 
 export function VisaAgentPipelinePage() {
   const navigate = useNavigate();
-  const [view, setView] = useState<"kanban" | "table">("kanban");
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -53,20 +52,6 @@ export function VisaAgentPipelinePage() {
           <p className="text-sm text-[#6B7280] font-medium mt-1">Track and manage every client from creation to visa approval.</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex bg-white p-1 border border-[#E5E7EB] rounded-2xl shadow-sm">
-            <button
-              onClick={() => setView("kanban")}
-              className={`p-2.5 rounded-xl transition-all ${view === "kanban" ? "bg-[#111827] text-white shadow-lg" : "text-[#6B7280] hover:bg-gray-50"}`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setView("table")}
-              className={`p-2.5 rounded-xl transition-all ${view === "table" ? "bg-[#111827] text-white shadow-lg" : "text-[#6B7280] hover:bg-gray-50"}`}
-            >
-              <ListIcon className="w-4 h-4" />
-            </button>
-          </div>
           <button 
             onClick={() => navigate('/visa-agent/clients/create')}
             className="flex items-center gap-2 px-6 py-3 bg-emerald-600 rounded-2xl text-sm font-black text-white hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100 uppercase tracking-widest"
@@ -100,57 +85,7 @@ export function VisaAgentPipelinePage() {
             <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
           </div>
         )}
-        {view === "kanban" ? (
-          <div className="flex gap-6 h-full pb-4 min-w-max">
-            {stages.map((stage) => (
-              <div key={stage.id} className="w-80 flex flex-col gap-4">
-                <div className="flex items-center justify-between px-2">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 ${stage.color} rounded-full`} />
-                    <h3 className="text-[10px] font-black text-[#111827] uppercase tracking-[0.2em]">{stage.name}</h3>
-                  </div>
-                  <span className="text-[10px] font-black text-[#9CA3AF] bg-white border border-[#E5E7EB] px-2 py-0.5 rounded-full">
-                    {filteredClients.filter(c => (c.status || 'client_created') === stage.id).length}
-                  </span>
-                </div>
-                <div className="flex-1 bg-gray-50/50 rounded-[32px] border border-[#E5E7EB] p-3 space-y-3 overflow-y-auto custom-scrollbar">
-                  {filteredClients.filter(c => (c.stage || c.status || 'client_created') === stage.id).map((client) => (
-                    <div 
-                      key={client._id} 
-                      onClick={() => navigate(`/visa-agent/clients/${client._id}`)}
-                      className="bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm hover:shadow-md hover:border-emerald-500 transition-all cursor-pointer group"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <span className="text-[10px] font-black text-[#9CA3AF] tracking-[0.1em] uppercase">{client.clientId || client.gxvcId || 'PENDING ID'}</span>
-                        <MoreVertical className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#111827]" />
-                      </div>
-                      <h4 className="text-sm font-black text-[#111827] mb-1">{client.fullName || client.linkedUser?.name || 'Unknown'}</h4>
-                      <div className="flex flex-wrap items-center gap-2 mb-4">
-                        <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border border-emerald-100">{client.country}</span>
-                        <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border border-blue-100">{client.visaType}</span>
-                      </div>
-                      <div className="flex items-center justify-between border-t border-gray-50 pt-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 bg-gray-100 rounded-xl flex items-center justify-center">
-                            <User className="w-3.5 h-3.5 text-[#6B7280]" />
-                          </div>
-                          <span className="text-[10px] font-black text-[#6B7280] uppercase tracking-tighter">{client.passport || 'NO PASSPORT'}</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-[#CBD5E1] group-hover:text-emerald-500 transition-colors" />
-                      </div>
-                    </div>
-                  ))}
-                  {filteredClients.filter(c => (c.stage || c.status || 'client_created') === stage.id).length === 0 && (
-                     <div className="h-24 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center">
-                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">No Clients</p>
-                     </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-[40px] border border-[#E5E7EB] shadow-xl overflow-hidden">
+        <div className="bg-white rounded-[40px] border border-[#E5E7EB] shadow-xl overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead className="bg-[#F9FAFB] border-b border-[#F3F4F6]">
                 <tr>
@@ -191,8 +126,7 @@ export function VisaAgentPipelinePage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

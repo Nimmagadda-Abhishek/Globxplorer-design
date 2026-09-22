@@ -102,7 +102,6 @@ export function VisaPanelPage() {
                 <th className="px-6 py-4 text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider">DS-160 / Payment</th>
                 <th className="px-6 py-4 text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider">Current Stage</th>
                 <th className="px-6 py-4 text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider">Deadline</th>
-                <th className="px-6 py-4 text-[10px] font-black text-[#9CA3AF] uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F3F4F6]">
@@ -140,11 +139,6 @@ export function VisaPanelPage() {
                       <Clock className={`w-3.5 h-3.5 ${app.status === 'Urgent' ? 'text-red-500' : 'text-[#9CA3AF]'}`} />
                       <span className={app.status === 'Urgent' ? 'text-red-600 font-bold' : ''}>{app.cutOffDates || app.deadline || 'No Deadline'}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-5 text-right">
-                    <button className="p-2 text-[#9CA3AF] hover:text-[#111827] rounded-lg">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
                   </td>
                 </tr>
               ))}

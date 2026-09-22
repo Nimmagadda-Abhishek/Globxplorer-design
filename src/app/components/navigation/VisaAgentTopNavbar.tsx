@@ -61,7 +61,6 @@ export function VisaAgentTopNavbar() {
             <p className="text-xs font-bold text-slate-900 leading-none mb-1">{profile?.name || "Agent Portal"}</p>
             <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">{profile?.gxId || "GX-VISA"}</p>
           </div>
-          <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
         </div>
       </div>
     </header>

@@ -88,6 +88,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       { path: "/visa-agent/payments", label: "Payments", icon: CreditCard },
       { path: "/visa-agent/appointments", label: "Appointments", icon: CalendarCheck },
       { path: "/visa-agent/profile", label: "Profile", icon: User },
+      { path: "/visa-agent/settings", label: "Settings", icon: Settings },
     ],
     STUDENT: [
       { path: "/student", label: "Dashboard", icon: LayoutDashboard },

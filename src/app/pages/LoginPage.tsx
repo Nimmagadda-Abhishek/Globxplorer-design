@@ -37,7 +37,13 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const result: any = await authApi.login({ gxId, password });
+      // Detect if input is email or gxId
+      const isEmail = gxId.includes("@");
+      const loginData = isEmail 
+        ? { email: gxId, password }
+        : { gxId, password };
+      
+      const result: any = await authApi.login(loginData);
 
       const data = result.data || result;
       const accessToken = data?.accessToken || result.token || result.access_token;
@@ -158,17 +164,14 @@ export function LoginPage() {
 
         {/* Brand Header */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <Globe className="w-6 h-6 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-2xl font-bold text-white tracking-tight">GlobXplore</span>
+            <img src="/favicon.png" alt="GlobXplore" className="w-50 h-20 object-contain" />
         </div>
 
         {/* Value Proposition */}
         <div className="relative z-10 max-w-lg mt-auto mb-32">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8">
             <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-            <span className="text-xs font-medium text-indigo-100 tracking-wide uppercase">CRM Platform 2.0</span>
+            <span className="text-xs font-medium text-indigo-100 tracking-wide uppercase">CRM Platform</span>
           </div>
           <h1 className="text-4xl xl:text-5xl font-semibold text-white leading-[1.15] mb-6 tracking-[-0.02em]">
             Command your global student pipeline.
@@ -181,7 +184,6 @@ export function LoginPage() {
         {/* Footer info */}
         <div className="relative z-10 flex items-center justify-between text-sm text-slate-500">
           <span>&copy; {new Date().getFullYear()} GlobXplore</span>
-          <a href="#" className="hover:text-white transition-colors duration-200">Help & Support</a>
         </div>
       </div>
 
@@ -193,10 +195,7 @@ export function LoginPage() {
         <div className="w-full max-w-[420px] relative z-10">
           {/* Mobile Branding */}
           <div className="flex lg:hidden items-center gap-3 mb-12">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/20">
-              <Globe className="w-5 h-5 text-white" strokeWidth={2.5} />
-            </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">GlobXplore</span>
+            <img src="/favicon.png" alt="GlobXplore" className="w-80 h-20 object-contain" />
           </div>
 
           <div className="mb-10 text-left">

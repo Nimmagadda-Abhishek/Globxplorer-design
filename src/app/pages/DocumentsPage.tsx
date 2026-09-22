@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, FileText, CheckCircle, Clock, AlertCircle, Download, Loader2, Upload, X, Building2, User, File, Check, XCircle, MessageSquare } from "lucide-react";
+import { Search, FileText, CheckCircle, Clock, AlertCircle, Download, Loader2, Upload, X, Building2, User, File, Check, XCircle, MessageSquare, Trash2 } from "lucide-react";
 import { DocumentPreviewModal } from "../components/modals/DocumentPreviewModal";
 import { documentApi, adminApi } from "../../lib/api";
 
@@ -108,6 +108,30 @@ export function DocumentsPage() {
       console.error("Failed to fetch company documents:", err);
     } finally {
       setLoadingCompanyDocs(false);
+    }
+  };
+
+  const handleDeleteCompanyDocument = async (id: string, name: string) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    try {
+      await adminApi.companyDocuments.delete(id);
+      await fetchCompanyDocuments();
+    } catch (err: any) {
+      console.error("Failed to delete company document:", err);
+      window.alert(err.message || "Failed to delete document. Please try again.");
+    }
+  };
+
+  const handleDeleteStudentDocument = async (id: string, name: string) => {
+    if (!window.confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+
+    try {
+      await adminApi.companyDocuments.delete(id);
+      await fetchDocuments();
+    } catch (err: any) {
+      console.error("Failed to delete student document:", err);
+      window.alert(err.message || "Failed to delete document. Please try again.");
     }
   };
 
@@ -417,6 +441,16 @@ export function DocumentsPage() {
                           >
                             <Download className="w-4 h-4 text-[#6B7280]" />
                           </button>
+                          {role === "ADMIN" && (
+                            <button
+                              onClick={() => handleDeleteStudentDocument(doc.id, doc.documentType)}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded"
+                              title="Delete Document"
+                              aria-label={`Delete ${doc.documentType}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -518,12 +552,22 @@ export function DocumentsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleViewCompanyDoc(doc._id || doc.id)}
-                          className="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#4B5563] hover:bg-[#F9FAFB] hover:text-[#111827] transition-all shadow-sm"
-                        >
-                          View
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleViewCompanyDoc(doc._id || doc.id)}
+                            className="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-sm font-medium text-[#4B5563] hover:bg-[#F9FAFB] hover:text-[#111827] transition-all shadow-sm"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCompanyDocument(doc._id || doc.id, doc.name || doc.originalName || "this document")}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete document"
+                            aria-label={`Delete ${doc.name || doc.originalName || "document"}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

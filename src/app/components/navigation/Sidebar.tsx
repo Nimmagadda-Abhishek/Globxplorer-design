@@ -69,14 +69,12 @@ const adminNavGroups = [
     items: [
       { path: "/partner-offers", label: "Partner Offers", icon: Gift },
       { path: "/documents", label: "Document Center", icon: FileText },
-      { path: "/marketing", label: "Content / Marketing", icon: Globe },
     ]
   },
   {
     group: "Engagement & Tools",
     items: [
       { path: "/alerts", label: "Alerts & Reminders", icon: BellRing },
-      { path: "/whatsapp-logs", label: "WhatsApp Logs", icon: MessageSquare },
       { path: "/settings", label: "Settings Panel", icon: Settings },
     ]
   }
@@ -215,12 +213,9 @@ export function Sidebar() {
     <aside className="w-72 bg-white border-r border-[#E5E7EB] flex flex-col h-full">
       <div className="h-16 flex items-center px-6 border-b border-[#E5E7EB] bg-white sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden">
-            <img src="/favicon.jpg" alt="GlobXplore" className="w-full h-full object-cover" />
-          </div>
-          <div className="flex flex-col -space-y-1">
-            <span className="text-base font-black text-[#111827] tracking-tight">GlobXplore</span>
-            <span className="text-[9px] font-bold text-[#6B7280] uppercase tracking-widest">{isAM ? "AM Console" : isAgent ? "Agent Console" : isCounsellor ? "Counsellor Console" : isTelecaller ? "Telecaller Console" : "Admin Control"}</span>
+            <img src="/favicon.png" alt="GlobXplore" className="w-50 h-10 object-contain" />
+          <div className="flex flex-row items-center">
+            <span className="text-[10px] font-bold text-[#0a0a0a] uppercase tracking-widest">{isAM ? "AM Console" : isAgent ? "Agent Console" : isCounsellor ? "Counsellor Console" : isTelecaller ? "Telecaller Console" : "Admin Control"}</span>
           </div>
         </div>
       </div>

@@ -78,7 +78,7 @@ export function DashboardPage() {
     { title: "Visa Refused", value: summary?.visaRefused || "0", icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
     { title: "Revenue This Month", value: summary?.revenueThisMonth ? `₹${Number(summary.revenueThisMonth).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "₹0.00", icon: DollarSign, color: "text-cyan-600", bg: "bg-cyan-50" },
     { title: "Pending Follow-ups", value: summary?.pendingFollowUps || "0", icon: Calendar, color: "text-pink-600", bg: "bg-pink-50" },
-    { title: "Active Employees", value: summary?.activeEmployeesToday || "0", icon: Users2, color: "text-slate-600", bg: "bg-slate-50" },
+    { title: "Active Employees", value: summary?.activeEmployees || "0", icon: Users2, color: "text-slate-600", bg: "bg-slate-50" },
   ];
 
   const performanceStats = [

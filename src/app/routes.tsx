@@ -62,6 +62,8 @@ import { StudentProfilePage } from "./pages/student/StudentProfilePage";
 import { MyBookingsPage } from "./pages/student/MyBookingsPage";
 import { StudentManualPage } from "./pages/student/StudentManualPage";
 import { StudentJobsPage } from "./pages/student/StudentJobsPage";
+import { AnnouncementsPage } from "./components/shared/Announcements";
+import { studentPortalApi, alumniApi } from "../lib/api";
 
 // Visa Agent Portal Pages
 import { VisaAgentLayout } from "./components/layouts/VisaAgentLayout";
@@ -208,6 +210,7 @@ export const router = createBrowserRouter([
       { path: "profile", Component: StudentProfilePage },
       { path: "manual", Component: StudentManualPage },
       { path: "jobs", Component: StudentJobsPage },
+      { path: "announcements", element: <AnnouncementsPage fetchAnnouncements={studentPortalApi.dashboard.getAnnouncements} role="student" /> },
     ],
   },
   {
@@ -230,6 +233,7 @@ export const router = createBrowserRouter([
       { path: "analytics", Component: AnalyticsPage },
       { path: "notifications", Component: NotificationsPage },
       { path: "profile", Component: VisaAgentProfilePage },
+      { path: "settings", Component: SettingsPage },
     ],
   },
   {
@@ -270,6 +274,7 @@ export const router = createBrowserRouter([
       { path: "brand-ambassador", Component: AlumniBrandAmbassadorPage },
       { path: "notifications", Component: NotificationsPage },
       { path: "profile", Component: AlumniProfilePage },
+      { path: "announcements", element: <AnnouncementsPage fetchAnnouncements={alumniApi.dashboard.getAnnouncements} role="alumni" /> },
     ],
   },
   {

@@ -82,7 +82,6 @@ export function AlumniManagerTopNavbar() {
             <p className="text-sm font-bold text-slate-900 leading-none">{profile?.name || "Alumni Manager"}</p>
             <p className="text-xs font-medium text-slate-500 mt-1">{profile?.role || "Manager Portal"}</p>
           </div>
-          <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-teal-600 hidden sm:block" />
         </div>
       </div>
     </header>

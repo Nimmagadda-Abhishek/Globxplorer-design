@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { studentPortalApi } from "../../../lib/api";
+import { AnnouncementPreview, Announcement } from "../../components/shared/Announcements";
 
 export function StudentDashboardPage() {
   const navigate = useNavigate();
@@ -23,19 +24,27 @@ export function StudentDashboardPage() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [webinars, setWebinars] = useState<any[]>([]);
   const [pendingPayments, setPendingPayments] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [dashRes, webRes, pipeRes, docRes, requestsRes] = await Promise.all([
+        const responses: any[] = await Promise.all([
           studentPortalApi.dashboard.get().catch(() => null),
           studentPortalApi.support.getWebinars().catch(() => null),
           studentPortalApi.pipeline.get().catch(() => null),
           studentPortalApi.documents.getAll().catch(() => null),
-          studentPortalApi.payment.getMyRequests().catch(() => ({ success: true, data: [] }))
+          studentPortalApi.payment.getMyRequests().catch(() => ({ success: true, data: [] })),
+          studentPortalApi.dashboard.getAnnouncements().catch(() => null)
         ]);
+        const dashRes: any = responses[0];
+        const webRes: any = responses[1];
+        const pipeRes: any = responses[2];
+        const docRes: any = responses[3];
+        const requestsRes: any = responses[4];
+        const announcementsRes: any = responses[5];
 
         const dashData = dashRes?.data || dashRes || null;
         if (dashData) {
@@ -55,6 +64,8 @@ export function StudentDashboardPage() {
         
         const requests = requestsRes?.data || requestsRes || [];
         setPendingPayments(Array.isArray(requests) ? requests.filter((r: any) => r.status?.toLowerCase() === 'pending') : []);
+        const announcementData = announcementsRes?.data || announcementsRes || [];
+        setAnnouncements(Array.isArray(announcementData) ? announcementData : []);
       } catch (err: any) {
         console.error("Dashboard fetch error:", err);
       } finally {
@@ -178,6 +189,8 @@ export function StudentDashboardPage() {
           </div>
         ))}
       </div>
+
+      <AnnouncementPreview announcements={announcements} path="/student/announcements" />
 
       {/* Quick Actions & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

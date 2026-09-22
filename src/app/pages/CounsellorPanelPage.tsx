@@ -39,18 +39,17 @@ export function CounsellorPanelPage() {
   };
 
   const counsellors = data?.counsellors || [];
+  const overall = data?.overall;
   
   const totalStudents = counsellors.reduce((acc: number, c: any) => acc + (c.studentsHandled || 0), 0);
-  const avgVisa = counsellors.length 
+  const avgVisa = overall?.visaSuccess?.ratePercent ?? (counsellors.length 
     ? counsellors.reduce((acc: number, c: any) => acc + (c.visaSuccess?.ratePercent || 0), 0) / counsellors.length 
-    : 0;
-  const avgDays = counsellors.length 
+    : 0);
+  const avgDays = overall?.avgProcessing?.avgProcessingDays ?? (counsellors.length 
     ? counsellors.reduce((acc: number, c: any) => acc + (c.avgProcessing?.avgProcessingDays || 0), 0) / counsellors.length 
-    : 0;
-  const validSatisfaction = counsellors.filter((c: any) => c.satisfaction !== null);
-  const avgSatisfaction = validSatisfaction.length 
-    ? validSatisfaction.reduce((acc: number, c: any) => acc + c.satisfaction, 0) / validSatisfaction.length 
-    : 0;
+    : 0);
+  const satisfaction = overall?.satisfaction;
+  const topCounsellor = data?.topCounsellor;
 
   return (
     <div className="space-y-8 relative">
@@ -67,9 +66,9 @@ export function CounsellorPanelPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: "Students Handled", value: totalStudents, icon: GraduationCap, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Visa Success", value: `${avgVisa.toFixed(1)}%`, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Avg Processing", value: `${avgDays.toFixed(1)} Days`, icon: Clock, color: "text-indigo-600", bg: "bg-indigo-50" },
-          { label: "Satisfaction", value: validSatisfaction.length ? `${avgSatisfaction.toFixed(1)}/5` : "N/A", icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Visa Success", value: `${Number(avgVisa).toFixed(1)}%`, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
+          { label: "Avg Processing", value: `${Number(avgDays).toFixed(2)} Days`, icon: Clock, color: "text-indigo-600", bg: "bg-indigo-50" },
+          { label: "Satisfaction", value: satisfaction?.available ? `${satisfaction.value}` : "N/A", icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-2xl border border-[#E5E7EB] shadow-sm">
             <div className={`w-10 h-10 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
@@ -92,17 +91,22 @@ export function CounsellorPanelPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-[#111827]">{c.name}</p>
-                  <p className="text-[10px] text-[#6B7280] uppercase font-black tracking-widest">{c.studentsHandled || 0} Applications</p>
+                  <p className="text-[10px] text-[#6B7280] font-medium">{c.email || "No email"} {c.phone ? `· ${c.phone}` : ""}</p>
+                  <p className="text-[10px] text-[#6B7280] uppercase font-black tracking-widest">{c.studentsHandled || 0} Students Handled</p>
                 </div>
               </div>
               <div className="flex items-center gap-12 text-right">
                 <div>
-                  <p className="text-xs font-black text-[#10B981]">{c.visaSuccess?.ratePercent || 0}%</p>
-                  <p className="text-[10px] text-[#9CA3AF] font-bold">Success Rate</p>
+                  <p className="text-xs font-black text-[#10B981]">{c.visaSuccess?.visaSuccessCount || 0} / {c.visaSuccess?.visaTotal || 0}</p>
+                  <p className="text-[10px] text-[#9CA3AF] font-bold">Visa Success</p>
                 </div>
                 <div>
                   <p className="text-xs font-black text-[#111827]">{c.avgProcessing?.avgProcessingDays || 0} Days</p>
-                  <p className="text-[10px] text-[#9CA3AF] font-bold">Avg. Time</p>
+                  <p className="text-[10px] text-[#9CA3AF] font-bold">Avg. Processing</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-[#4F46E5]">{Number(c.performanceScore || 0).toFixed(1)}</p>
+                  <p className="text-[10px] text-[#9CA3AF] font-bold">Performance</p>
                 </div>
                 {isAdmin && (
                   <button
@@ -121,6 +125,26 @@ export function CounsellorPanelPage() {
           )}
         </div>
       </div>
+
+      {topCounsellor && (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Top Counsellor</p>
+            <h3 className="text-lg font-black text-[#111827]">{topCounsellor.name}</h3>
+            <p className="text-xs text-[#6B7280]">{topCounsellor.email} · {topCounsellor.gxId}</p>
+          </div>
+          <div className="flex items-center gap-6 text-right">
+            <div>
+              <p className="text-xl font-black text-[#111827]">{topCounsellor.studentsHandled || 0}</p>
+              <p className="text-[10px] font-bold text-[#6B7280] uppercase">Students</p>
+            </div>
+            <div>
+              <p className="text-xl font-black text-indigo-600">{Number(topCounsellor.performanceScore || 0).toFixed(1)}</p>
+              <p className="text-[10px] font-bold text-[#6B7280] uppercase">Score</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

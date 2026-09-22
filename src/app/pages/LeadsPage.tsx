@@ -57,7 +57,6 @@ export function LeadsPage() {
         // Match your lead-management payload fields
         country: apiLead.interestCountry || apiLead.country || "-",
         interest: apiLead.interestedLevel || apiLead.interest || "-",
-        course: apiLead.course || "-",
         source: apiLead.source || "-",
         status: apiLead.status || "New",
         assignedTo: apiLead.assignedTo?.name || apiLead.assignedAgent?.name || apiLead.agent || "-",
