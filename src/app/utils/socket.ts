@@ -5,7 +5,7 @@ let socket: Socket | null = null;
 export const initSocket = (userId: string) => {
   if (socket) return socket;
 
-  const serverUrl = import.meta.env.VITE_API_URL || "https://api.globxplore.in";
+  const serverUrl = import.meta.env.VITE_API_URL || "https://globxplore-2.onrender.com";
   socket = io(serverUrl);
 
   socket.on("connect", () => {
